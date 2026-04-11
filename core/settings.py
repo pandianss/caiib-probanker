@@ -25,6 +25,14 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-6)3l9!b6&23h2xou^qt5w*#&r80&(-#0!6y)1#m3l0_j_714k4')
 
+from django.core.exceptions import ImproperlyConfigured
+if not os.environ.get('ADMIN_SECRET') and not DEBUG:
+    # We only raise in production if not set, or we can enforce it completely:
+    pass
+
+if 'ADMIN_SECRET' not in os.environ:
+    raise ImproperlyConfigured("ADMIN_SECRET environment variable is missing. It must not be hardcoded.")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
@@ -47,6 +55,9 @@ INSTALLED_APPS = [
 
     # Custom apps
     'api',
+    
+    # Auth
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -114,8 +125,27 @@ MONGO_DB_NAME = env('MONGO_DB_NAME', default='caiib_content')
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
 CORS_ALLOW_ALL_ORIGINS = True

@@ -12,6 +12,8 @@ class Candidate(models.Model):
     ], null=True, blank=True)
     attempts_count = models.PositiveIntegerField(default=0)
     start_date = models.DateField(auto_now_add=True)
+    study_streak = models.IntegerField(default=0)
+    last_study_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.user.username
@@ -68,3 +70,24 @@ class QuestionAttempt(models.Model):
     is_correct = models.BooleanField(default=False)
     marks_obtained = models.FloatField(default=0.0)
     time_taken_seconds = models.IntegerField(default=0)
+
+class UserActivity(models.Model):
+    ACTIVITY_CHOICES = [(0,'video'),(1,'question'),(2,'flashcard'),(3,'reading')]
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    activity_type = models.IntegerField(choices=ACTIVITY_CHOICES)
+    concept_id = models.IntegerField()  # maps to syllabus concept index
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+class ConsentLog(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    consent_type = models.CharField(max_length=100)
+    version = models.CharField(max_length=20, default='1.0')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True)
+
+class SubscriptionPlan(models.Model):
+    candidate = models.OneToOneField(Candidate, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=False)
+    plan_type = models.CharField(max_length=50, default='FREE')
+    expiry_date = models.DateField(null=True, blank=True)
+    razorpay_order_id = models.CharField(max_length=100, blank=True)

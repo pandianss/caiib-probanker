@@ -26,11 +26,27 @@ class TAMKOTService:
         # Concepts: Mapped to syllabus points
         self.model = TAMKOTModel(num_activities=5, num_concepts=100, embed_dim=32, hidden_dim=64)
         self.model.eval()
+        self.weights_loaded = False
+        
+    def load_weights(self, path):
+        import os
+        if os.path.exists(path):
+            try:
+                self.model.load_state_dict(torch.load(path))
+                self.model.eval()
+                self.weights_loaded = True
+            except Exception as e:
+                print(f"Failed to load TAMKOT weights: {e}")
+        else:
+            print(f"TAMKOT weights file not found at {path}")
 
     def predict_passing_probability(self, activity_logs):
         """
         activity_logs: List of (activity_type, concept_id)
         """
+        if not self.weights_loaded:
+            return 0.5
+            
         if not activity_logs:
             return 0.5 # Start with neutral probability
             

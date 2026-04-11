@@ -11,6 +11,39 @@ from .services.content_service import ContentService
 from .services.srs_service import SRSService
 from .services.tamkot_service import TAMKOTService
 from .services.scoring_service import ScoringService
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email', '')
+        
+        if not username or not password:
+            return Response({"error": "username and password required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "user already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = User.objects.create_user(username=username, password=password, email=email)
+        candidate = Candidate.objects.create(user=user)
+        
+        # Log IP consent
+        if 'consent' in request.data:
+            from .models import ConsentLog
+            ip = request.META.get('REMOTE_ADDR')
+            ConsentLog.objects.create(candidate=candidate, consent_type='TOS_DPDP_2023', ip_address=ip)
+            
+        return Response({"status": "user created successfully"}, status=status.HTTP_201_CREATED)
+
+class BaseAuthenticatedView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_candidate(self, request):
+        candidate, _ = Candidate.objects.get_or_create(user=request.user)
+        return candidate
 
 content_service = ContentService()
 srs_service = SRSService()
@@ -24,11 +57,9 @@ class SyllabusView(APIView):
         structure = content_service.get_syllabus_structure()
         return Response(structure)
 
-class CandidateProgressView(APIView):
-    # For now, we mock the 'user' as the first one or create one for dev
+class CandidateProgressView(BaseAuthenticatedView):
     def get(self, request):
-        user, _ = User.objects.get_or_create(username='dev_user', defaults={'email': 'dev@example.com'})
-        candidate, _ = Candidate.objects.get_or_create(user=user)
+        candidate = self.get_candidate(request)
         serializer = CandidateSerializer(candidate)
         return Response(serializer.data)
 
@@ -44,23 +75,21 @@ class PaperContentView(APIView):
             "flashcards": flashcards
         })
 
-class SelectElectiveView(APIView):
+class SelectElectiveView(BaseAuthenticatedView):
     def post(self, request):
         elective_code = request.data.get('elective_code')
         if not elective_code:
             return Response({"error": "elective_code is required"}, status=status.HTTP_400_BAD_REQUEST)
         
-        user, _ = User.objects.get_or_create(username='dev_user', defaults={'email': 'dev@example.com'})
-        candidate, _ = Candidate.objects.get_or_create(user=user)
+        candidate = self.get_candidate(request)
         candidate.selected_elective = elective_code
         candidate.save()
         
         return Response({"status": "elective selected", "candidate": CandidateSerializer(candidate).data})
 
-class DueFlashcardsView(APIView):
+class DueFlashcardsView(BaseAuthenticatedView):
     def get(self, request):
-        user, _ = User.objects.get_or_create(username='dev_user', defaults={'email': 'dev@example.com'})
-        candidate, _ = Candidate.objects.get_or_create(user=user)
+        candidate = self.get_candidate(request)
         due_metadata = srs_service.get_due_cards(candidate)
         
         # Combine metadata with content from MongoDB
@@ -75,7 +104,7 @@ class DueFlashcardsView(APIView):
             })
         return Response(response_data)
 
-class RecordReviewView(APIView):
+class RecordReviewView(BaseAuthenticatedView):
     def post(self, request):
         card_id = request.data.get('card_id')
         quality = request.data.get('quality') # 0-5
@@ -83,10 +112,9 @@ class RecordReviewView(APIView):
         if card_id is None or quality is None:
             return Response({"error": "card_id and quality are required"}, status=status.HTTP_400_BAD_REQUEST)
         
-        user, _ = User.objects.get_or_create(username='dev_user', defaults={'email': 'dev@example.com'})
-        candidate, _ = Candidate.objects.get_or_create(user=user)
+        candidate = self.get_candidate(request)
         metadata, _ = SRSMetadata.objects.get_or_create(
-            candidate=candidate, 
+            candidate=candidate,  
             card_id=card_id,
             defaults={'next_review': timezone.now()}
         )
@@ -94,17 +122,15 @@ class RecordReviewView(APIView):
         srs_service.update_card(metadata, int(quality))
         return Response({"status": "updated", "next_review": metadata.next_review})
 
-class KnowledgeTracingView(APIView):
+class KnowledgeTracingView(BaseAuthenticatedView):
     def get(self, request):
-        user, _ = User.objects.get_or_create(username='dev_user', defaults={'email': 'dev@example.com'})
-        candidate, _ = Candidate.objects.get_or_create(user=user)
+        candidate = self.get_candidate(request)
         progress = PaperProgressSerializer(candidate.progress.all(), many=True).data
         
-        # In a real app, logs would be fetched from a UserActivity model
-        # For now, we use dummy logs to demonstrate TAMKOT
-        dummy_logs = [(0, 10), (1, 15), (0, 20)] # (activity_type, concept_id)
+        from .models import UserActivity
+        user_logs = UserActivity.objects.filter(candidate=candidate).order_by('timestamp').values_list('activity_type', 'concept_id')
         
-        passing_prob = tamkot_service.predict_passing_probability(dummy_logs)
+        passing_prob = tamkot_service.predict_passing_probability(list(user_logs))
         thresholds = tamkot_service.get_passing_thresholds(progress)
         
         return Response({
@@ -113,30 +139,34 @@ class KnowledgeTracingView(APIView):
             "recommendation": "Focus on numerical problems in ABM to improve aggregate." if passing_prob < 0.6 else "Maintaining steady progress."
         })
 
-class StartExamView(APIView):
+class StartExamView(BaseAuthenticatedView):
     def post(self, request):
         paper_code = request.data.get('paper_code')
         if not paper_code:
             return Response({"error": "paper_code is required"}, status=status.HTTP_400_BAD_REQUEST)
         
-        user, _ = User.objects.get_or_create(username='dev_user', defaults={'email': 'dev@example.com'})
-        candidate, _ = Candidate.objects.get_or_create(user=user)
+        candidate = self.get_candidate(request)
         session = ExamSession.objects.create(
             candidate=candidate,
             paper_code=paper_code,
             status='STARTED'
         )
         
-        # Get randomized questions
+        import random
         questions = content_service.get_questions(paper_code)
-        
+        if hasattr(questions, '__iter__') and not isinstance(questions, dict):
+            questions = list(questions)
+            random.shuffle(questions)
+        else:
+            questions = list(questions)
+            
         return Response({
             "session_id": session.id,
             "paper_code": paper_code,
             "questions": questions
         })
 
-class SubmitExamView(APIView):
+class SubmitExamView(BaseAuthenticatedView):
     def post(self, request):
         session_id = request.data.get('session_id')
         answers = request.data.get('answers') # List of {id, value}
@@ -149,16 +179,60 @@ class SubmitExamView(APIView):
         except ExamSession.DoesNotExist:
             return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        # Record attempts
+        questions = content_service.get_questions(session.paper_code)
+        q_dict = {str(q['id']) if 'id' in q else str(q.get('_id', '')): q for q in questions}
+        candidate = session.candidate
+        
         for ans in answers:
+            q_id = str(ans['id'])
+            user_val = str(ans['value']).strip().lower()
+            q_obj = q_dict.get(q_id)
+            
+            is_correct = False
+            marks = 0.0
+            
+            if q_obj:
+                correct_ans = str(q_obj.get('answer', '')).strip().lower()
+                q_type = q_obj.get('type', 'mcq')
+                
+                if q_type == 'numerical':
+                    try:
+                        is_correct = abs(float(user_val) - float(correct_ans)) <= 0.01
+                    except ValueError:
+                        is_correct = False
+                else:
+                    is_correct = (user_val == correct_ans)
+                
+                marks = 1.0 if is_correct else 0.0
+                
             QuestionAttempt.objects.create(
                 session=session,
                 question_id=ans['id'],
                 user_answer=ans['value'],
-                is_correct=True, # Mock: everything is correct for testing
-                marks_obtained=1.0 
+                is_correct=is_correct,
+                marks_obtained=marks 
             )
             
+            # SRS Spaced Repetition Integration
+            meta, _ = SRSMetadata.objects.get_or_create(
+                candidate=candidate,
+                card_id=q_id,
+                defaults={'next_review': timezone.now()}
+            )
+            if is_correct:
+                if ans.get('time_taken_seconds', 0) < 20:
+                    srs_service.update_card(meta, 5)
+            else:
+                srs_service.update_card(meta, 1)
+            
+            # Log Activity
+            from .models import UserActivity
+            UserActivity.objects.create(
+                candidate=candidate,
+                activity_type=1, # Question
+                concept_id=int(q_obj.get('module_id', 0)) if q_obj else 0
+            )
+
         scoring_service.calculate_session_result(session)
         result = scoring_service.check_aggregate_pass(session.candidate)
         
