@@ -22,6 +22,27 @@ class BiteSerializer(serializers.ModelSerializer):
         model = Bite
         fields = '__all__'
 
+class BiteListSerializer(serializers.ModelSerializer):
+    """Safe for Library listing — no answer fields."""
+    class Meta:
+        model = Bite
+        fields = [
+            'id', 'bite_id', 'paper_code', 'module', 'chapter',
+            'title', 'difficulty', 'bite_type', 'estimated_minutes', 'tags'
+        ]
+
+class BiteDetailSerializer(serializers.ModelSerializer):
+    """Full detail — used only when user starts a bite session."""
+    class Meta:
+        model = Bite
+        fields = [
+            'id', 'bite_id', 'paper_code', 'module', 'chapter',
+            'title', 'concept', 'example', 'formula',
+            'question_text', 'question_type', 'options',
+            'difficulty', 'bite_type', 'estimated_minutes'
+            # NOTE: 'answer', 'tolerance', 'explanation' are intentionally excluded
+        ]
+
 class CandidateSerializer(serializers.ModelSerializer):
     progress = PaperProgressSerializer(many=True, read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)

@@ -5,11 +5,14 @@ import 'screens/auth/login_screen.dart';
 import 'screens/shell/main_shell.dart';
 import 'services/api_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final authProvider = AuthProvider();
+  await authProvider.checkToken();
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => ProgressProvider()),
       ],
       child: const MyApp(),
@@ -57,16 +60,25 @@ class AuthProvider extends ChangeNotifier {
 class ProgressProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   Map<String, dynamic>? candidateData;
-  Map<String, dynamic>? tracingData;
+  Map<String, dynamic>? statsData;
   bool isLoading = true;
   int dueCount = 0;
 
   Future<void> fetchDashboardData() async {
     isLoading = true;
     notifyListeners();
-    candidateData = await _apiService.getProgress();
-    tracingData = await _apiService.getKnowledgeTracing();
-    dueCount = 0;
+    
+    final results = await Future.wait([
+      _apiService.getProgress(),
+      _apiService.getStats(),
+      _apiService.getDueBites(),
+    ]);
+
+    candidateData = results[0] as Map<String, dynamic>?;
+    statsData = results[1] as Map<String, dynamic>?;
+    final dueData = results[2] as Map<String, dynamic>?;
+    dueCount = dueData?['due_count'] ?? 0;
+
     isLoading = false;
     notifyListeners();
   }

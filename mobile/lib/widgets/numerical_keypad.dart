@@ -31,14 +31,15 @@ class NumericalKeypad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        color: const Color(0xFF161B22),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
+            color: Colors.black45,
+            blurRadius: 20,
             spreadRadius: 2,
           )
         ],
@@ -47,21 +48,27 @@ class NumericalKeypad extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Text('NUMERICAL INPUT', style: TextStyle(color: Color(0xFF8B949E), fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 1.2)),
+              ),
               TextButton(
                 onPressed: onSubmitted,
-                child: const Text('DONE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                child: const Text('SUBMIT', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF6366F1), letterSpacing: 1.1)),
               ),
             ],
           ),
+          const SizedBox(height: 12),
           GridView.count(
             shrinkWrap: true,
             crossAxisCount: 3,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 1.5,
-            padding: const EdgeInsets.only(bottom: 24),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.8,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 16),
             children: [
               _buildKey('1'), _buildKey('2'), _buildKey('3'),
               _buildKey('4'), _buildKey('5'), _buildKey('6'),
@@ -77,16 +84,17 @@ class NumericalKeypad extends StatelessWidget {
   Widget _buildKey(String value) {
     return InkWell(
       onTap: () => _onKeyPress(value),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(8),
+          color: Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Text(
           value,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
         ),
       ),
     );
@@ -95,14 +103,15 @@ class NumericalKeypad extends StatelessWidget {
   Widget _buildBackspace() {
     return InkWell(
       onTap: _onBackspace,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.red[50],
-          borderRadius: BorderRadius.circular(8),
+          color: const Color(0xFFF43F5E).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF43F5E).withOpacity(0.2)),
         ),
-        child: const Icon(Icons.backspace_outlined, color: Colors.redAccent),
+        child: const Icon(Icons.backspace_outlined, color: Color(0xFFF43F5E), size: 24),
       ),
     );
   }

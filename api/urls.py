@@ -3,7 +3,8 @@ from .views import (
     CandidateProgressView, SelectElectiveView,
     KnowledgeTracingView, TodaysBiteView, PaperBitesView, SubmitBiteView,
     RegisterView, TokenObtainPairView, TokenRefreshView, ProfileUpdateView,
-    DeleteAccountView, PingView
+    DeleteAccountView, PingView, CandidateStatsView, MasteredBiteIdsView,
+    DueBitesView, BiteHistoryView
 )
 
 urlpatterns = [
@@ -13,8 +14,12 @@ urlpatterns = [
     path('progress/', CandidateProgressView.as_view(), name='progress'),
     path('profile/update/', ProfileUpdateView.as_view(), name='profile-update'),
     path('select-elective/', SelectElectiveView.as_view(), name='select-elective'),
+    path('stats/', CandidateStatsView.as_view(), name='candidate-stats'),
     path('knowledge-tracing/', KnowledgeTracingView.as_view(), name='knowledge-tracing'),
     path('bites/today/', TodaysBiteView.as_view(), name='bites-today'),
+    path('bites/mastered/', MasteredBiteIdsView.as_view(), name='mastered-bites'),
+    path('bites/due/', DueBitesView.as_view(), name='due-bites'),
+    path('bites/history/', BiteHistoryView.as_view(), name='bite-history'),
     path('bites/submit/', SubmitBiteView.as_view(), name='submit-bite'),
     path('bites/<str:paper_code>/', PaperBitesView.as_view(), name='paper-bites'),
     path('auth/delete/', DeleteAccountView.as_view(), name='delete-account'),

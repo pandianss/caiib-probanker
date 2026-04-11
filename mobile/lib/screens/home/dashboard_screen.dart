@@ -52,7 +52,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       masteredTotal += (p['mastered'] as num? ?? 0).toInt();
     }
     
-    final srsDueCount = _todaysBite?['srs_due_count'] ?? 0;
+    final srsDueCount = provider.dueCount;
+
+    String greeting;
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour < 17) {
+      greeting = 'Good afternoon';
+    } else {
+      greeting = 'Good evening';
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -83,7 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Good morning, $firstName',
+                                '$greeting, $firstName',
                                 style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.w600),
                               ),
                               Container(

@@ -3,24 +3,72 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  final String _baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://127.0.0.1:8000/api');
+  final String _baseUrl = const String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000/api', // Android Emulator default
+  );
   final _storage = const FlutterSecureStorage();
 
   Future<String?> getToken() async => await _storage.read(key: 'jwt');
 
-  Future<bool> register(String name, String password, String email, String mobile, String elective) async {
+  Future<String?> _getValidToken() async {
+    final token = await getToken();
+    if (token == null) return null;
+
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return token;
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final data = jsonDecode(payload);
+      final exp = data['exp'] as int;
+      final expiry = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+
+      // Refresh if expiring in less than 5 minutes
+      if (DateTime.now().isAfter(expiry.subtract(const Duration(minutes: 5)))) {
+        return await _refreshToken();
+      }
+      return token;
+    } catch (_) {
+      return token;
+    }
+  }
+
+  Future<String?> _refreshToken() async {
+    final refreshToken = await _storage.read(key: 'jwt_refresh');
+    if (refreshToken == null) return null;
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/token/refresh/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh': refreshToken}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        await _storage.write(key: 'jwt', value: data['access']);
+        return data['access'];
+      }
+    } catch (_) {}
+
+    await clearSession();
+    return null;
+  }
+
+  Future<Map<String, dynamic>> register(String name, String password, String email, String mobile, String elective) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/register/'),
         body: {'name': name, 'password': password, 'email': email, 'mobile_number': mobile, 'elective': elective},
       ).timeout(const Duration(seconds: 10));
-      // Django DRF response 201 Created or 200 OK.
+      
+      final data = jsonDecode(response.body);
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return true; // Use standard login after this
+        return {'success': true};
       }
-      return false;
+      return {'success': false, 'error': data['error'] ?? 'Registration failed.'};
     } catch (e) {
-      return false;
+      return {'success': false, 'error': 'Connection error. Please check your network.'};
     }
   }
 
@@ -33,6 +81,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         await _storage.write(key: 'jwt', value: data['access']);
+        await _storage.write(key: 'jwt_refresh', value: data['refresh']);
         return true;
       }
       return false;
@@ -42,7 +91,7 @@ class ApiService {
   }
 
   Future<bool> updateProfile(String name) async {
-    final token = await getToken();
+    final token = await _getValidToken();
     if (token == null) return false;
     try {
       final response = await http.put(
@@ -57,41 +106,37 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>?> getProgress() async {
-    final token = await getToken();
+    final token = await _getValidToken();
     if (token == null) return null;
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/progress/'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
+      if (response.statusCode == 200) return jsonDecode(response.body);
       return null;
     } catch (e) {
       return null;
     }
   }
 
-  Future<Map<String, dynamic>?> getKnowledgeTracing() async {
-     final token = await getToken();
-     if (token == null) return null;
-     try {
-       final response = await http.get(
-         Uri.parse('$_baseUrl/knowledge-tracing/'),
-         headers: {'Authorization': 'Bearer $token'},
-       ).timeout(const Duration(seconds: 10));
-       if (response.statusCode == 200) {
-          return jsonDecode(response.body);
-       }
-       return null;
-     } catch (e) {
-       return null;
-     }
+  Future<Map<String, dynamic>?> getStats() async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/stats/'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<Map<String, dynamic>?> getTodaysBite() async {
-    final token = await getToken();
+    final token = await _getValidToken();
     if (token == null) return null;
     try {
       final response = await http.get(
@@ -105,12 +150,60 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>?> getDueBites() async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/bites/due/'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<String>?> getMasteredBiteIds() async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/bites/mastered/'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return List<String>.from(data['mastered_ids']);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<dynamic>?> getBiteHistory() async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/bites/history/'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> submitBite({
     required String biteId,
     required String answer,
     required int timeTakenSeconds,
   }) async {
-    final token = await getToken();
+    final token = await _getValidToken();
     if (token == null) return null;
     try {
       final response = await http.post(
@@ -126,7 +219,7 @@ class ApiService {
   }
 
   Future<List<dynamic>?> getBitesByPaper(String paperCode) async {
-    final token = await getToken();
+    final token = await _getValidToken();
     if (token == null) return null;
     try {
       final response = await http.get(
@@ -142,10 +235,11 @@ class ApiService {
 
   Future<void> clearSession() async {
     await _storage.delete(key: 'jwt');
+    await _storage.delete(key: 'jwt_refresh');
   }
 
   Future<bool> updateElective(String elective) async {
-    final token = await getToken();
+    final token = await _getValidToken();
     if (token == null) return false;
     try {
       final response = await http.post(
@@ -160,7 +254,7 @@ class ApiService {
   }
 
   Future<bool> deleteAccount() async {
-    final token = await getToken();
+    final token = await _getValidToken();
     if (token == null) return false;
     try {
       final response = await http.post(

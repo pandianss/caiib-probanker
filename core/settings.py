@@ -22,19 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-6)3l9!b6&23h2xou^qt5w*#&r80&(-#0!6y)1#m3l0_j_714k4')
-
-from django.core.exceptions import ImproperlyConfigured
-if not os.environ.get('ADMIN_SECRET') and not DEBUG:
-    # We only raise in production if not set, or we can enforce it completely:
-    pass
-
-if 'ADMIN_SECRET' not in os.environ:
-    raise ImproperlyConfigured("ADMIN_SECRET environment variable is missing. It must not be hardcoded.")
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-6)3l9!b6&23h2xou^qt5w*#&r80&(-#0!6y)1#m3l0_j_714k4' if DEBUG else None)
+
+from django.core.exceptions import ImproperlyConfigured
+if not DEBUG and 'ADMIN_SECRET' not in os.environ:
+    raise ImproperlyConfigured("ADMIN_SECRET must be set in production.")
+ADMIN_SECRET = os.environ.get('ADMIN_SECRET', 'dev_secret_not_for_production')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
@@ -58,6 +55,7 @@ INSTALLED_APPS = [
     
     # Auth
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -94,17 +92,17 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': env.db('DATABASE_URL', default=f"postgres://{env('DB_USER')}:{env('DB_PASSWORD')}@{env('DB_HOST')}:{env('DB_PORT')}/{env('DB_NAME')}")
-}
-
-# Use lightweight SQLite for local development to avoid network-related hangs
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if env.bool('USE_SQLITE', default=True):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': env.db('DATABASE_URL')
+    }
 
 # MongoDB Configuration (via pymongo)
 MONGO_URI = env('MONGO_URI', default='mongodb://localhost:27017/')
@@ -127,8 +125,8 @@ AUTHENTICATION_BACKENDS = [
 from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
@@ -140,7 +138,11 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 
 
 # Password validation
@@ -178,3 +180,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'api': {'handlers': ['console'], 'level': 'DEBUG', 'propagate': False},
+    },
+}

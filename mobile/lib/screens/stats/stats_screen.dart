@@ -10,26 +10,33 @@ class StatsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProgressProvider>();
-    final candidateData = provider.candidateData;
-    final progressMap = candidateData?['progress'] as List<dynamic>? ?? [];
+    final stats = provider.statsData;
+    final progressMap = provider.candidateData?['progress'] as List<dynamic>? ?? [];
     
-    final streak = candidateData?['study_streak'] ?? 0;
+    final streak = provider.candidateData?['study_streak'] ?? 0;
     
-    int masteredTotal = 0;
-    int itemsTotal = 0;
-    for (var p in progressMap) {
-      masteredTotal += (p['mastered'] as num? ?? 0).toInt();
-      itemsTotal += (p['total_bites'] as int? ?? 1);
+    final masteredTotal = stats?['total_mastered'] ?? 0;
+    final itemsTotal = stats?['total_items'] ?? 1; // avoid div by zero
+    final reviewedTotal = stats?['total_reviewed'] ?? 0;
+    final accuracy = stats?['accuracy_rate']?.round() ?? 0;
+    
+    // Activity processing (last 7 days)
+    final activity = stats?['activity'] as Map<String, dynamic>? ?? {};
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> last7Days = [];
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final dayLabel = ['M','T','W','T','F','S','S'][(date.weekday - 1) % 7];
+      last7Days.add({
+        'label': dayLabel,
+        'active': (activity[dateStr] ?? 0) > 0,
+      });
     }
-    
-    // We don't track raw "Accuracy" or "Reviewed" exactly yet without another API call,
-    // so we approximate or use placeholders for the demo.
-    final accuracy = 87; // Mocked
-    final reviewedTotal = masteredTotal + 12; // Mocked
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stats'),
+        title: const Text('Statistics'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -77,26 +84,26 @@ class StatsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: ['M','T','W','T','F','S','S'].asMap().entries.map((entry) {
-                  // Mock heatmap (last 3 days active)
-                  final isActive = entry.key >= 4; 
+                children: last7Days.map((day) {
+                  final isActive = day['active']; 
                   return Column(
                     children: [
                       Container(
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: isActive ? const Color(0xFF6366F1) : const Color(0xFF161B22),
+                          color: isActive ? const Color(0xFF10B981) : const Color(0xFF161B22),
                           shape: BoxShape.circle,
                         ),
                         child: isActive ? const Icon(Icons.check, size: 16, color: Colors.white) : const SizedBox(),
                       ),
                       const SizedBox(height: 8),
-                      Text(entry.value, style: TextStyle(fontSize: 12, color: isActive ? Colors.white : const Color(0xFF8B949E))),
+                      Text(day['label'], style: TextStyle(fontSize: 12, color: isActive ? Colors.white : const Color(0xFF8B949E))),
                     ],
                   );
                 }).toList(),
               ),
+),
               
               const SizedBox(height: 48),
               const Text('MASTERY BY PAPER', style: TextStyle(fontSize: 13, color: Color(0xFF8B949E), fontWeight: FontWeight.bold, letterSpacing: 1.2)),

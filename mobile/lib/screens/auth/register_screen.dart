@@ -11,6 +11,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController(); // Added
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
   String? _selectedElective;
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose(); // Added
     _emailController.dispose();
     _mobileController.dispose();
     super.dispose();
@@ -33,21 +35,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() => errorMessage = 'Passwords do not match.');
+      return;
+    }
+
     setState(() {
       isRegistering = true;
       errorMessage = '';
     });
-    final success = await _apiService.register(
+    
+    final result = await _apiService.register(
       _nameController.text,
       _passwordController.text,
       _emailController.text,
       _mobileController.text,
       _selectedElective!
     );
+
     setState(() {
       isRegistering = false;
     });
-    if (success) {
+
+    if (result['success'] == true) {
       if (mounted) {
         Navigator.pop(context); // Go back to login
         ScaffoldMessenger.of(context).showSnackBar(
@@ -56,7 +66,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } else {
       setState(() {
-        errorMessage = 'Registration failed. Username may exist.';
+        errorMessage = result['error'] ?? 'Registration failed.';
       });
     }
   }
@@ -142,6 +152,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                  prefixIcon: Icon(Icons.lock_reset),
+                ),
+              ),
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -164,7 +183,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ElevatedButton(
                 onPressed: isRegistering ? null : _handleRegister,
                 child: isRegistering 
-                   ? const CircularProgressIndicator(color: Colors.white)
+                   ? const SizedBox(
+                       height: 20, 
+                       width: 20, 
+                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                     )
                    : const Text('CREATE ACCOUNT'),
               ),
             ],

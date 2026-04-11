@@ -56,6 +56,18 @@ class _BiteScreenState extends State<BiteScreen> {
     }
   }
 
+  void _goToNextBite() async {
+    final nextBiteData = await ApiService().getTodaysBite();
+    if (mounted && nextBiteData != null && nextBiteData['bite'] != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => BiteScreen(bite: nextBiteData['bite'])),
+      );
+    } else if (mounted) {
+      Navigator.pop(context); // No more bites — go back
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,6 +104,7 @@ class _BiteScreenState extends State<BiteScreen> {
                       bite: widget.bite,
                       isCorrect: _isCorrect ?? false,
                       resultData: _resultData ?? {},
+                      onNext: _goToNextBite,
                     ),
         ),
       ),
@@ -251,8 +264,9 @@ class _ResultPhase extends StatelessWidget {
   final Map<String, dynamic> bite;
   final bool isCorrect;
   final Map<String, dynamic> resultData;
+  final VoidCallback onNext;
 
-  const _ResultPhase({required this.bite, required this.isCorrect, required this.resultData});
+  const _ResultPhase({required this.bite, required this.isCorrect, required this.resultData, required this.onNext});
 
   @override
   Widget build(BuildContext context) {
@@ -324,9 +338,22 @@ class _ResultPhase extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF21262D), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1), 
+                foregroundColor: Colors.white, 
+                padding: const EdgeInsets.symmetric(vertical: 16), 
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+              ),
+              onPressed: onNext,
+              child: const Text('Next Bite →', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Back to Dashboard', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text('Done for now', style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.6))),
             ),
           ),
         ],
