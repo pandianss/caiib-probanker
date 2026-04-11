@@ -3,7 +3,8 @@ from .views import (
     SyllabusView, CandidateProgressView, PaperContentView, 
     SelectElectiveView, DueFlashcardsView, RecordReviewView,
     KnowledgeTracingView, StartExamView, SubmitExamView,
-    AdminContentAPI, CaseStudyView, RegisterView, TokenObtainPairView, TokenRefreshView
+    AdminContentAPI, CaseStudyView, RegisterView, TokenObtainPairView, TokenRefreshView,
+    ProfileUpdateView
 )
 
 urlpatterns = [
@@ -12,6 +13,7 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('syllabus/', SyllabusView.as_view(), name='syllabus'),
     path('progress/', CandidateProgressView.as_view(), name='progress'),
+    path('profile/update/', ProfileUpdateView.as_view(), name='profile-update'),
     path('content/<str:paper_code>/', PaperContentView.as_view(), name='paper-content'),
     path('select-elective/', SelectElectiveView.as_view(), name='select-elective'),
     path('srs/due/', DueFlashcardsView.as_view(), name='srs-due'),

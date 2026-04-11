@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from .models import Candidate, PaperProgress, SRSMetadata, ExamSession, QuestionAttempt
 from .serializers import CandidateSerializer, PaperProgressSerializer, SRSMetadataSerializer
 from .services.content_service import ContentService
@@ -17,18 +19,43 @@ class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
         password = request.data.get('password')
-        email = request.data.get('email', '')
+        email = request.data.get('email', '').strip()
+        mobile = request.data.get('mobile_number', '').strip()
+        name = request.data.get('name', '').strip()
+        elective = request.data.get('elective', '').strip()
+        elective = request.data.get('elective', '').strip()
         
-        if not username or not password:
-            return Response({"error": "username and password required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not email or not mobile or not password or not name or not elective:
+            return Response({"error": "All fields including elective are required"}, status=status.HTTP_400_BAD_REQUEST)
         
-        if User.objects.filter(username=username).exists():
-            return Response({"error": "user already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(email__iexact=email).exists():
+            return Response({"error": "This email address is already registered."}, status=status.HTTP_400_BAD_REQUEST)
             
-        user = User.objects.create_user(username=username, password=password, email=email)
-        candidate = Candidate.objects.create(user=user)
+        if Candidate.objects.filter(mobile_number=mobile).exists():
+            return Response({"error": "This mobile number is already registered."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            return Response({"error": " ".join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+            
+        base_username = f"{email.split('@')[0]}_{mobile[-4:]}"
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+            
+        first_name = name.split(' ')[0] if name else ''
+        last_name = ' '.join(name.split(' ')[1:]) if ' ' in name else ''
+        
+        user = User.objects.create_user(username=username, password=password, email=email, first_name=first_name, last_name=last_name)
+        candidate = Candidate.objects.create(
+            user=user, 
+            mobile_number=mobile, 
+            selected_elective=elective
+        )
         
         # Log IP consent
         if 'consent' in request.data:
@@ -62,6 +89,20 @@ class CandidateProgressView(BaseAuthenticatedView):
         candidate = self.get_candidate(request)
         serializer = CandidateSerializer(candidate)
         return Response(serializer.data)
+
+class ProfileUpdateView(BaseAuthenticatedView):
+    def put(self, request):
+        candidate = self.get_candidate(request)
+        name = request.data.get('name', '').strip()
+        
+        if name:
+            first_name = name.split(' ')[0]
+            last_name = ' '.join(name.split(' ')[1:]) if ' ' in name else ''
+            candidate.user.first_name = first_name
+            candidate.user.last_name = last_name
+            candidate.user.save()
+            return Response({"status": "profile updated"}, status=status.HTTP_200_OK)
+        return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
 class PaperContentView(APIView):
     permission_classes = [permissions.AllowAny]
