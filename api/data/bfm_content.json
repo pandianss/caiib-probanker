@@ -1,0 +1,31 @@
+{
+  "flashcards": [
+    {"id": "bfm_fc_01", "paper_code": "BFM", "front": "Net Open Position Limit (NOPL)", "back": "The maximum limit set by RBI on the aggregate net position (long and short) a bank can hold across all foreign currencies."},
+    {"id": "bfm_fc_02", "paper_code": "BFM", "front": "Basel III - CRAR Requirement (India)", "back": "RBI mandates a minimum Capital to Risk-weighted Assets Ratio (CRAR) of 9% for Indian banks."},
+    {"id": "bfm_fc_03", "paper_code": "BFM", "front": "Capital Conservation Buffer (CCB)", "back": "A buffer of 2.5% of Risk Weighted Assets (RWA) intended to be used during periods of stress."},
+    {"id": "bfm_fc_04", "paper_code": "BFM", "front": "Vostro Account Definition", "back": "Your account with us (e.g., a foreign bank maintaining an INR account with an Indian bank)."},
+    {"id": "bfm_fc_05", "paper_code": "BFM", "front": "Nostro Account Definition", "back": "Our account with you (e.g., an Indian bank maintaining a USD account with a US bank)."},
+    {"id": "bfm_fc_06", "paper_code": "BFM", "front": "Loro Account Definition", "back": "Their account with you (e.g., Bank A referring to Bank B's account with Bank C)."},
+    {"id": "bfm_fc_07", "paper_code": "BFM", "front": "Modified Duration Formula", "back": "Duration / (1 + Yield). It measures the price sensitivity of a bond to changes in interest rates."},
+    {"id": "bfm_fc_08", "paper_code": "BFM", "front": "Tier 1 Capital components", "back": "Common Equity Tier 1 (CET1) + Additional Tier 1 (AT1). Includes share capital, stock premium, and perpetual non-cumulative preference shares."}
+  ],
+  "questions": [
+    {
+      "id": "bfm_q_01",
+      "paper_code": "BFM",
+      "type": "numerical",
+      "question": "A bank has Risk Weighted Assets (RWA) of ₹10,000 Crore. As per Basel III (India), what is the minimum total capital (including CCB) it must maintain?",
+      "answer": "1150",
+      "explanation": "Min Total Capital = 9% (CRAR) + 2.5% (CCB) = 11.5%. 11.5% of 10,000 = ₹1,150 Crore."
+    },
+    {
+      "id": "bfm_q_02",
+      "paper_code": "BFM",
+      "type": "mcq",
+      "question": "Which of the following risks is NOT part of the Pillar 1 capital requirement under Basel III?",
+      "options": ["Credit Risk", "Market Risk", "Operational Risk", "Liquidity Risk"],
+      "answer": "Liquidity Risk",
+      "explanation": "Pillar 1 covers Credit, Market, and Operational risks. Liquidity risk is managed under Pillar 2 (Internal Capital Adequacy Assessment Process - ICAAP)."
+    }
+  ]
+}

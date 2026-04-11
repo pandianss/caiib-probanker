@@ -1,0 +1,55 @@
+# Environment and local config
+.env
+db.sqlite3
+*.sqlite3
+
+# Python
+venv/
+venv_new/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Frontend / Node
+node_modules/
+dist/
+build/
+.next/
+out/
+.vercel
+.npm
+*.log
+
+# IDEs and Tools
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.gemini/
+scratch/
+
+# Application specific
+api/media/
+api/static/
+static/
+media/
