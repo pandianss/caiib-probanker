@@ -2,42 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Rich color palette
-  static const Color primaryNavy = Color(0xFF0F172A);
-  static const Color secondaryTeal = Color(0xFF14B8A6);
-  static const Color vibrantGold = Color(0xFFF59E0B);
-  static const Color backgroundLight = Color(0xFFF8FAFC);
-  static const Color backgroundDark = Color(0xFF020617);
-  static const Color surfaceDark = Color(0xFF1E293B);
-  static const Color errorRed = Color(0xFFEF4444);
+  // Bitsize colour palette
+  static const Color backgroundDark  = Color(0xFF0D1117); // softer near-black with warm undertone
+  static const Color surfaceDark      = Color(0xFF161B22); // card surface
+  static const Color surfaceElevated  = Color(0xFF21262D); // elevated cards
+  static const Color primaryIndigo    = Color(0xFF6366F1); // indigo — knowledge, depth
+  static const Color accentAmber      = Color(0xFFFBBF24); // amber — energy, streaks
+  static const Color accentEmerald    = Color(0xFF10B981); // emerald — success, mastery
+  static const Color errorRose        = Color(0xFFF43F5E); // rose — wrong answers
+  static const Color textPrimary      = Color(0xFFE6EDF3);
+  static const Color textMuted        = Color(0xFF8B949E);
 
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: backgroundDark,
-      primaryColor: secondaryTeal,
+      primaryColor: primaryIndigo,
       colorScheme: const ColorScheme.dark(
-        primary: secondaryTeal,
-        secondary: vibrantGold,
+        primary: primaryIndigo,
+        secondary: accentAmber,
         surface: surfaceDark,
         background: backgroundDark,
-        error: errorRed,
+        error: errorRose,
       ),
-      textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-        titleLarge: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
-        bodyLarge: GoogleFonts.inter(fontSize: 16, color: Colors.white70),
-        bodyMedium: GoogleFonts.inter(fontSize: 14, color: Colors.white60),
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme).copyWith(
+        displayLarge: GoogleFonts.plusJakartaSans(fontSize: 32, fontWeight: FontWeight.bold, color: textPrimary),
+        titleLarge: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary),
+        bodyLarge: GoogleFonts.inter(fontSize: 16, color: textPrimary),
+        bodyMedium: GoogleFonts.inter(fontSize: 14, color: textMuted),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: secondaryTeal,
+          backgroundColor: primaryIndigo,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
+          textStyle: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -53,7 +55,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: secondaryTeal, width: 2),
+          borderSide: const BorderSide(color: primaryIndigo, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),

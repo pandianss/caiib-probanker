@@ -1,0 +1,53 @@
+{
+  "paper_code": "RISK",
+  "bites": [
+    {
+      "id": "risk_cre_001",
+      "module": "Credit Risk",
+      "chapter": "Credit Risk Measurement",
+      "title": "Credit Default Swaps (CDS)",
+      "concept": "A CDS is a financial derivative that allows an investor to 'swap' or offset their credit risk with that of another investor. If a company defaults, the CDS provider pays the buyer the value of the bond.",
+      "example": "A bank holding a bond issued by a risky airline buys a CDS from an insurance company to protect against default.",
+      "check_question": {
+        "type": "mcq",
+        "question": "In a Credit Default Swap (CDS) contract, which party pays periodic premiums to the other?",
+        "options": ["The Protection Seller", "The Protection Buyer", "The Reference Entity", "The Regulator"],
+        "answer": "The Protection Buyer",
+        "explanation": "The protection buyer pays a premium (fixed rate) to the seller in exchange for a payout if a credit event (default) occurs."
+      },
+      "tags": ["RISK", "Credit", "medium"]
+    },
+    {
+      "id": "risk_mar_001",
+      "module": "Market Risk",
+      "chapter": "Interest Rate Risk",
+      "title": "Basis Risk",
+      "concept": "Basis risk is the risk that the relationship between two interest rates will change. In banking, it specifically refers to the risk that the interest rates of assets and liabilities, even if they have the same maturity, will change by different amounts or at different times because they are based on different indices.",
+      "example": "A loan based on the Repo Rate and a deposit based on the Treasury Bill rate create basis risk.",
+      "check_question": {
+        "type": "mcq",
+        "question": "Which of the following describes the risk arising from price changes of assets and liabilities in response to different benchmark rates?",
+        "options": ["Yield Curve Risk", "Repricing Risk", "Basis Risk", "Option Risk"],
+        "answer": "Basis Risk",
+        "explanation": "Basis risk occurs when interest rates of different assets/liabilities are tied to different indices that don't move in perfect lockstep."
+      },
+      "tags": ["RISK", "Market", "medium"]
+    },
+    {
+      "id": "risk_ope_001",
+      "module": "Operational Risk",
+      "chapter": "Operational Risk Management",
+      "title": "Key Risk Indicators (KRIs)",
+      "concept": "KRIs are metrics used by organizations to provide an early signal of increasing risk exposures in various areas. They are 'forward-looking' indicators, unlike historical loss data which is 'backward-looking'.",
+      "example": "A high rate of staff turnover in the back-office is a KRI for potential operational errors/fraud.",
+      "check_question": {
+        "type": "mcq",
+        "question": "Which of the following is a characteristic of a well-defined Key Risk Indicator (KRI)?",
+        "options": ["It is purely historical.", "It is difficult to measure.", "It acts as an early warning signal.", "It is only relevant to top management."],
+        "answer": "It acts as an early warning signal.",
+        "explanation": "KRIs are designed to predict potential risk events before they manifest as actual losses."
+      },
+      "tags": ["RISK", "Operational", "easy"]
+    }
+  ]
+}

@@ -1,6 +1,4 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+# Imports moved to __init__ for performance
 
 class TAMKOTModel(nn.Module):
     def __init__(self, num_activities, num_concepts, embed_dim, hidden_dim):
@@ -21,6 +19,8 @@ class TAMKOTModel(nn.Module):
 
 class TAMKOTService:
     def __init__(self):
+        import torch
+        import torch.nn as nn
         # Initializing with dummy dimensions for bootstrap
         # Activities: 0: Video, 1: Question, 2: Reading
         # Concepts: Mapped to syllabus points

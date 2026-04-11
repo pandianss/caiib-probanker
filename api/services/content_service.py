@@ -10,14 +10,20 @@ class ContentService:
         self.use_fallback = False
         self.local_repo = {}
         
-        # 1. Try MongoDB Connection
-        try:
-            self.client = MongoClient(settings.MONGO_URI, serverSelectionTimeoutMS=2000)
-            self.client.server_info()
-            self.db = self.client[settings.MONGO_DB_NAME]
-        except Exception as e:
-            print(f"MongoDB connection failed: {e}. Using JSON repositories.")
-            self.use_fallback = True
+    def __init__(self):
+        self.client = None
+        self.db = None
+        self.use_fallback = True
+        self.local_repo = {}
+        
+        # 1. MongoDB Connection Disabled for Stability
+        # try:
+        #     self.client = MongoClient(settings.MONGO_URI, serverSelectionTimeoutMS=2000)
+        #     self.client.server_info()
+        #     self.db = self.client[settings.MONGO_DB_NAME]
+        # except Exception as e:
+        #     print(f"MongoDB connection failed: {e}. Using JSON repositories.")
+        #     self.use_fallback = True
 
         # 2. Always load JSON repositories as a core truth / dev fallback
         self._load_json_repositories()

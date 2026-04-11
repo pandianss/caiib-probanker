@@ -77,7 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               const SizedBox(height: 20),
               Text(
-                'Join ProBanker',
+                'Join CAIIB Bitsize',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 28),
                 textAlign: TextAlign.center,
               ),

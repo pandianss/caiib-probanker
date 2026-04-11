@@ -18,12 +18,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<ProgressProvider>();
+      if (provider.candidateData == null) {
+        provider.fetchDashboardData().then((_) => _initFields());
+      } else {
+        _initFields();
+      }
+    });
+  }
+
+  void _initFields() {
     final provider = context.read<ProgressProvider>();
     final candidateData = provider.candidateData;
     if (candidateData != null) {
       final String firstName = candidateData['first_name'] ?? '';
       final String lastName = candidateData['last_name'] ?? '';
-      _nameController.text = lastName.isEmpty ? firstName : '$firstName $lastName'.trim();
+      setState(() {
+         _nameController.text = lastName.isEmpty ? firstName : '$firstName $lastName'.trim();
+      });
     }
   }
 
@@ -113,18 +126,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   prefixIcon: const Icon(Icons.phone_android),
                 ),
               ),
-              const SizedBox(height: 48),
-
               ElevatedButton(
                 onPressed: isSaving ? null : _handleSave,
                 child: isSaving 
                    ? const CircularProgressIndicator(color: Colors.white)
                    : const Text('SAVE CHANGES'),
               ),
+
+              const SizedBox(height: 16),
+              
+              OutlinedButton(
+                onPressed: () {
+                   context.read<AuthProvider>().logout();
+                   Navigator.of(context, rootNavigator: true).pop(); // Go back to shell then it will redirect
+                },
+                style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white24)),
+                child: const Text('LOGOUT', style: TextStyle(color: Colors.white70)),
+              ),
+
+              const SizedBox(height: 48),
+              
+              TextButton(
+                onPressed: () => _confirmDelete(context),
+                child: const Text('DELETE ACCOUNT', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Account?'),
+        content: const Text('This action is permanent and will delete all your study progress. Are you sure?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() { isSaving = true; });
+              final success = await _apiService.deleteAccount();
+              if (success && mounted) {
+                context.read<AuthProvider>().logout();
+              } else if (mounted) {
+                setState(() { isSaving = false; });
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete account.')));
+              }
+            }, 
+            child: const Text('DELETE', style: TextStyle(color: Colors.redAccent))
+          ),
+        ],
+      )
     );
   }
 }

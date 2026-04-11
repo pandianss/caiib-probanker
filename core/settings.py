@@ -98,26 +98,13 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default=f"postgres://{env('DB_USER')}:{env('DB_PASSWORD')}@{env('DB_HOST')}:{env('DB_PORT')}/{env('DB_NAME')}")
 }
 
-# Fallback to SQLite if local PostgreSQL fails during development
-if env('DB_HOST') == '127.0.0.1' and not os.environ.get('DISABLE_SQLITE_FALLBACK'):
-    try:
-        import psycopg2
-        conn = psycopg2.connect(
-            dbname=env('DB_NAME'),
-            user=env('DB_USER'),
-            password=env('DB_PASSWORD'),
-            host=env('DB_HOST'),
-            port=env('DB_PORT'),
-            connect_timeout=1
-        )
-        conn.close()
-    except Exception:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+# Use lightweight SQLite for local development to avoid network-related hangs
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # MongoDB Configuration (via pymongo)
 MONGO_URI = env('MONGO_URI', default='mongodb://localhost:27017/')

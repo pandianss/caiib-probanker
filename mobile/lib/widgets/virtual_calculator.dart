@@ -38,10 +38,10 @@ class _VirtualCalculatorState extends State<VirtualCalculator> {
     double result = 0;
 
     switch (_operator) {
-      +case '+': result = _firstOperand! + secondOperand; break;
-      -case '-': result = _firstOperand! - secondOperand; break;
-      *case '*': result = _firstOperand! * secondOperand; break;
-      /case '/': result = secondOperand != 0 ? _firstOperand! / secondOperand : 0; break;
+      case '+': result = _firstOperand! + secondOperand; break;
+      case '-': result = _firstOperand! - secondOperand; break;
+      case '*': result = _firstOperand! * secondOperand; break;
+      case '/': result = secondOperand != 0 ? _firstOperand! / secondOperand : 0; break;
     }
 
     setState(() {

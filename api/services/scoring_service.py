@@ -1,27 +1,6 @@
-from ..models import ExamSession, PaperProgress, Candidate
+from ..models import PaperProgress, Candidate
 
 class ScoringService:
-    @staticmethod
-    def calculate_session_result(session):
-        attempts = session.attempts.all()
-        total_marks = sum([a.marks_obtained for a in attempts])
-        
-        session.final_score = total_marks
-        # Individual paper pass requirement is 45 marks
-        session.is_pass = total_marks >= 45
-        session.status = 'COMPLETED'
-        session.save()
-        
-        # Update PaperProgress
-        progress, _ = PaperProgress.objects.get_or_create(
-            candidate=session.candidate,
-            paper_code=session.paper_code
-        )
-        progress.current_score = total_marks
-        progress.is_passed = session.is_pass
-        progress.save()
-        
-        return session
 
     @staticmethod
     def check_aggregate_pass(candidate):

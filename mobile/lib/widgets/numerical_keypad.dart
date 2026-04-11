@@ -1,22 +1,30 @@
 import 'package:flutter/material.dart';
 
 class NumericalKeypad extends StatelessWidget {
-  final TextEditingController controller;
-  final VoidCallback onSubmitted;
+  final ValueChanged<String>? onKeyPress;
+  final VoidCallback? onSubmitted;
+  final TextEditingController? controller;
 
   const NumericalKeypad({
     super.key,
-    required this.controller,
-    required this.onSubmitted,
+    this.onKeyPress,
+    this.onSubmitted,
+    this.controller,
   });
 
   void _onKeyPress(String value) {
-    controller.text += value;
+    if (onKeyPress != null) {
+      onKeyPress!(value);
+    } else if (controller != null) {
+      controller!.text += value;
+    }
   }
 
   void _onBackspace() {
-    if (controller.text.isNotEmpty) {
-      controller.text = controller.text.substring(0, controller.text.length - 1);
+    if (onKeyPress != null) {
+      onKeyPress!('DEL');
+    } else if (controller != null && controller!.text.isNotEmpty) {
+      controller!.text = controller!.text.substring(0, controller!.text.length - 1);
     }
   }
 

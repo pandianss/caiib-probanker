@@ -1,0 +1,53 @@
+{
+  "paper_code": "BRBL",
+  "bites": [
+    {
+      "id": "brbl_reg_001",
+      "module": "Module A: Regulations and Compliance",
+      "chapter": "Legal Framework of Regulation",
+      "title": "Dual Regulation of Cooperatives",
+      "concept": "Cooperative banks are subject to 'Dual Regulation'. Management and registration-related matters are governed by the State/Central Government (Registrar of Cooperative Societies), while banking-related functions are regulated by the RBI under the BR Act and RBI Act.",
+      "example": "If a Cooperative Bank needs to change its board structure, it follows the State Act; if it needs to change its interest rates, it follows RBI directions.",
+      "check_question": {
+        "type": "mcq",
+        "question": "Which authority is responsible for the 'Banking Regulation' aspects of Scheduled Urban Cooperative Banks?",
+        "options": ["NABARD", "State Government", "Reserve Bank of India (RBI)", "SEBI"],
+        "answer": "Reserve Bank of India (RBI)",
+        "explanation": "Banking functions of all cooperative banks are under the regulatory purview of the RBI."
+      },
+      "tags": ["BRBL", "Regulations", "easy"]
+    },
+    {
+      "id": "brbl_act_001",
+      "module": "Module B: Important Acts/Laws - Part A",
+      "chapter": "Banking Regulation Act, 1949",
+      "title": "Section 21: Power to Control Advances",
+      "concept": "Section 21 of the BR Act gives RBI the power to determine the policy for advances to be followed by banking companies. It can issue directions as to the purpose, margins, and rates of interest to be charged on loans.",
+      "example": "If the RBI wants to curb inflation in real estate, it can mandate a higher 'Loan-to-Value' (LTV) margin under Section 21.",
+      "check_question": {
+        "type": "mcq",
+        "question": "Under which section of the BR Act does the RBI exercise its power to control the advances made by banking companies?",
+        "options": ["Section 11", "Section 17", "Section 21", "Section 35"],
+        "answer": "Section 21",
+        "explanation": "Section 21 specifically empowers the RBI to manage the credit deployment policies of banks."
+      },
+      "tags": ["BRBL", "Acts", "medium"]
+    },
+    {
+      "id": "brbl_law_001",
+      "module": "Module D: Commercial & Other Laws",
+      "chapter": "Indian Contract Act, 1872",
+      "title": "Contract of Indemnity vs Guarantee",
+      "concept": "A 'Contract of Indemnity' (Section 124) is where one party promises to save the other from loss. A 'Contract of Guarantee' (Section 126) is a promise to perform the duty of a third person in case of their default. A guarantee has 3 parties, while indemnity has 2.",
+      "example": "An insurance policy is a contract of indemnity. A bank guarantee provided for a contractor is a contract of guarantee.",
+      "check_question": {
+        "type": "mcq",
+        "question": "How many parties are involved in a Contract of Guarantee?",
+        "options": ["1", "2", "3", "4"],
+        "answer": "3",
+        "explanation": "A guarantee involves the Surety (Bank), the Principal Debtor (Borrower), and the Creditor (Beneficiary)."
+      },
+      "tags": ["BRBL", "Laws", "easy"]
+    }
+  ]
+}

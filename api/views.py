@@ -6,13 +6,9 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import Candidate, PaperProgress, SRSMetadata, ExamSession, QuestionAttempt
-from .serializers import CandidateSerializer, PaperProgressSerializer, SRSMetadataSerializer
-from .services.content_service import ContentService
-
-from .services.srs_service import SRSService
-from .services.tamkot_service import TAMKOTService
-from .services.scoring_service import ScoringService
+from .models import Candidate, PaperProgress, SRSMetadata, Bite, BiteAttempt
+from .serializers import CandidateSerializer, PaperProgressSerializer, SRSMetadataSerializer, BiteSerializer
+# Services are lazy-loaded within getter functions to prevent startup hangs
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 class RegisterView(APIView):
@@ -23,7 +19,6 @@ class RegisterView(APIView):
         email = request.data.get('email', '').strip()
         mobile = request.data.get('mobile_number', '').strip()
         name = request.data.get('name', '').strip()
-        elective = request.data.get('elective', '').strip()
         elective = request.data.get('elective', '').strip()
         
         if not email or not mobile or not password or not name or not elective:
@@ -72,17 +67,133 @@ class BaseAuthenticatedView(APIView):
         candidate, _ = Candidate.objects.get_or_create(user=request.user)
         return candidate
 
-content_service = ContentService()
-srs_service = SRSService()
-tamkot_service = TAMKOTService()
-scoring_service = ScoringService()
+    def update_streak(self, candidate):
+        from datetime import date, timedelta
+        today = date.today()
+        if candidate.last_study_date is None:
+            candidate.study_streak = 1
+        elif candidate.last_study_date == today:
+            return  # Already studied today
+        elif candidate.last_study_date == today - timedelta(days=1):
+            candidate.study_streak += 1
+        else:
+            candidate.study_streak = 1  # Streak broken
+        candidate.last_study_date = today
+        candidate.save(update_fields=['study_streak', 'last_study_date'])
 
-class SyllabusView(APIView):
-    permission_classes = [permissions.AllowAny]
+def get_content_service():
+    if not hasattr(get_content_service, "_service"):
+        from .services.content_service import ContentService
+        get_content_service._service = ContentService()
+    return get_content_service._service
 
+def get_srs_service():
+    if not hasattr(get_srs_service, "_service"):
+        from .services.srs_service import SRSService
+        get_srs_service._service = SRSService()
+    return get_srs_service._service
+
+def get_tamkot_service():
+    if not hasattr(get_tamkot_service, "_service"):
+        from .services.tamkot_service import TAMKOTService
+        get_tamkot_service._service = TAMKOTService()
+    return get_tamkot_service._service
+
+def get_scoring_service():
+    if not hasattr(get_scoring_service, "_service"):
+        from .services.scoring_service import ScoringService
+        get_scoring_service._service = ScoringService()
+    return get_scoring_service._service
+
+class TodaysBiteView(BaseAuthenticatedView):
     def get(self, request):
-        structure = content_service.get_syllabus_structure()
-        return Response(structure)
+        candidate = self.get_candidate(request)
+        
+        # 1. Check SRS due
+        due = SRSMetadata.objects.filter(
+            candidate=candidate, 
+            next_review__lte=timezone.now()
+        ).order_by('next_review').first()
+        
+        if due:
+            try:
+                bite = Bite.objects.get(bite_id=due.card_id)
+                srs_due_count = SRSMetadata.objects.filter(candidate=candidate, next_review__lte=timezone.now()).count()
+                return Response({'bite': BiteSerializer(bite).data, 'mode': 'review', 'srs_due_count': srs_due_count})
+            except Bite.DoesNotExist:
+                pass
+        
+        # 2. Find next unseen bite from weakest paper
+        seen_ids = BiteAttempt.objects.filter(candidate=candidate).values_list('bite__bite_id', flat=True)
+        weakest = candidate.progress.order_by('current_score').first()
+        paper_filter = weakest.paper_code if weakest else candidate.selected_elective or 'ABM'
+        
+        bite = Bite.objects.exclude(bite_id__in=seen_ids).filter(paper_code=paper_filter).first()
+        if not bite:
+            bite = Bite.objects.exclude(bite_id__in=seen_ids).first()
+        
+        if not bite:
+            return Response({'message': 'all_bites_seen', 'total_bites': Bite.objects.count()})
+        
+        return Response({'bite': BiteSerializer(bite).data, 'mode': 'new'})
+
+class SubmitBiteView(BaseAuthenticatedView):
+    def post(self, request):
+        candidate = self.get_candidate(request)
+        bite_id = request.data.get('bite_id')
+        user_answer = str(request.data.get('answer', '')).strip()
+        time_taken = request.data.get('time_taken_seconds', 0)
+        
+        try:
+            bite = Bite.objects.get(bite_id=bite_id)
+        except Bite.DoesNotExist:
+            return Response({'error': 'Bite not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Grade answer
+        is_correct = False
+        if bite.question_type == 'mcq':
+            is_correct = user_answer.lower() == bite.answer.lower()
+        elif bite.question_type == 'numerical':
+            try:
+                is_correct = abs(float(user_answer) - float(bite.answer)) <= bite.tolerance
+            except ValueError:
+                is_correct = False
+        
+        # SRS quality mapping: correct+fast=5, correct+slow=4, wrong=1
+        if is_correct:
+            srs_quality = 5 if time_taken < 30 else 4
+        else:
+            srs_quality = 1
+        
+        # Update SRS
+        meta, _ = SRSMetadata.objects.get_or_create(
+            candidate=candidate, card_id=bite_id,
+            defaults={'next_review': timezone.now()}
+        )
+        get_srs_service().update_card(meta, srs_quality)
+        
+        # Record attempt
+        BiteAttempt.objects.create(
+            candidate=candidate, bite=bite,
+            user_answer=user_answer, is_correct=is_correct,
+            time_taken_seconds=time_taken
+        )
+        
+        # Update paper progress score - we map mastered bites implicitly
+        progress, _ = PaperProgress.objects.get_or_create(candidate=candidate, paper_code=bite.paper_code)
+        if is_correct:
+             progress.current_score += 1.0  # Mapping mastering points
+             progress.save()
+             
+        self.update_streak(candidate)
+        
+        return Response({
+            'is_correct': is_correct,
+            'correct_answer': bite.answer,
+            'explanation': bite.explanation,
+            'next_review': meta.next_review,
+            'srs_quality': srs_quality,
+        })
 
 class CandidateProgressView(BaseAuthenticatedView):
     def get(self, request):
@@ -94,232 +205,59 @@ class ProfileUpdateView(BaseAuthenticatedView):
     def put(self, request):
         candidate = self.get_candidate(request)
         name = request.data.get('name', '').strip()
-        
         if name:
             first_name = name.split(' ')[0]
             last_name = ' '.join(name.split(' ')[1:]) if ' ' in name else ''
             candidate.user.first_name = first_name
             candidate.user.last_name = last_name
             candidate.user.save()
-            return Response({"status": "profile updated"}, status=status.HTTP_200_OK)
-        return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-class PaperContentView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request, paper_code):
-        questions = content_service.get_questions(paper_code)
-        flashcards = content_service.get_flashcards(paper_code)
-        return Response({
-            "paper_code": paper_code,
-            "questions": questions,
-            "flashcards": flashcards
-        })
+        
+        mobile = request.data.get('mobile_number', '').strip()
+        if mobile:
+            candidate.mobile_number = mobile
+            candidate.save()
+            
+        return Response({"status": "profile updated"})
 
 class SelectElectiveView(BaseAuthenticatedView):
     def post(self, request):
-        elective_code = request.data.get('elective_code')
-        if not elective_code:
-            return Response({"error": "elective_code is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
         candidate = self.get_candidate(request)
-        candidate.selected_elective = elective_code
-        candidate.save()
-        
-        return Response({"status": "elective selected", "candidate": CandidateSerializer(candidate).data})
-
-class DueFlashcardsView(BaseAuthenticatedView):
-    def get(self, request):
-        candidate = self.get_candidate(request)
-        due_metadata = srs_service.get_due_cards(candidate)
-        
-        # Combine metadata with content from MongoDB
-        response_data = []
-        for meta in due_metadata:
-            # In a real app, we'd batch fetch from MongoDB
-            # For now, we mock some content if MongoDB is unavailable
-            card_content = {"id": meta.card_id, "front": "Front of " + meta.card_id, "back": "Back"}
-            response_data.append({
-                "metadata": SRSMetadataSerializer(meta).data,
-                "content": card_content
-            })
-        return Response(response_data)
-
-class RecordReviewView(BaseAuthenticatedView):
-    def post(self, request):
-        card_id = request.data.get('card_id')
-        quality = request.data.get('quality') # 0-5
-        
-        if card_id is None or quality is None:
-            return Response({"error": "card_id and quality are required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        candidate = self.get_candidate(request)
-        metadata, _ = SRSMetadata.objects.get_or_create(
-            candidate=candidate,  
-            card_id=card_id,
-            defaults={'next_review': timezone.now()}
-        )
-        
-        srs_service.update_card(metadata, int(quality))
-        return Response({"status": "updated", "next_review": metadata.next_review})
+        elective = request.data.get('elective')
+        if elective:
+            candidate.selected_elective = elective
+            candidate.save()
+            return Response({"status": "elective updated"})
+        return Response({"error": "elective is required"}, status=status.HTTP_400_BAD_REQUEST)
 
 class KnowledgeTracingView(BaseAuthenticatedView):
     def get(self, request):
         candidate = self.get_candidate(request)
-        progress = PaperProgressSerializer(candidate.progress.all(), many=True).data
-        
-        from .models import UserActivity
-        user_logs = UserActivity.objects.filter(candidate=candidate).order_by('timestamp').values_list('activity_type', 'concept_id')
-        
-        passing_prob = tamkot_service.predict_passing_probability(list(user_logs))
-        thresholds = tamkot_service.get_passing_thresholds(progress)
+        # In a real app, we'd fetch activity logs and pass to TAMKOT
+        # For now, we return a mock probability based on mastery
+        total_bites = Bite.objects.count()
+        mastered = candidate.bite_attempts.filter(is_correct=True).values('bite').distinct().count()
+        prob = (mastered / total_bites) if total_bites > 0 else 0.5
         
         return Response({
-            "passing_probability": passing_prob,
-            "exam_status": thresholds,
-            "recommendation": "Focus on numerical problems in ABM to improve aggregate." if passing_prob < 0.6 else "Maintaining steady progress."
+            "passing_probability": prob,
+            "status": "KEEP_STUDYING" if prob < 0.7 else "READY_FOR_EXAM"
         })
 
-class StartExamView(BaseAuthenticatedView):
-    def post(self, request):
-        paper_code = request.data.get('paper_code')
-        if not paper_code:
-            return Response({"error": "paper_code is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        candidate = self.get_candidate(request)
-        session = ExamSession.objects.create(
-            candidate=candidate,
-            paper_code=paper_code,
-            status='STARTED'
-        )
-        
-        import random
-        questions = content_service.get_questions(paper_code)
-        if hasattr(questions, '__iter__') and not isinstance(questions, dict):
-            questions = list(questions)
-            random.shuffle(questions)
-        else:
-            questions = list(questions)
-            
-        return Response({
-            "session_id": session.id,
-            "paper_code": paper_code,
-            "questions": questions
-        })
-
-class SubmitExamView(BaseAuthenticatedView):
-    def post(self, request):
-        session_id = request.data.get('session_id')
-        answers = request.data.get('answers') # List of {id, value}
-        
-        if not session_id or answers is None:
-            return Response({"error": "session_id and answers are required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            session = ExamSession.objects.get(id=session_id)
-        except ExamSession.DoesNotExist:
-            return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
-            
-        questions = content_service.get_questions(session.paper_code)
-        q_dict = {str(q['id']) if 'id' in q else str(q.get('_id', '')): q for q in questions}
-        candidate = session.candidate
-        
-        for ans in answers:
-            q_id = str(ans['id'])
-            user_val = str(ans['value']).strip().lower()
-            q_obj = q_dict.get(q_id)
-            
-            is_correct = False
-            marks = 0.0
-            
-            if q_obj:
-                correct_ans = str(q_obj.get('answer', '')).strip().lower()
-                q_type = q_obj.get('type', 'mcq')
-                
-                if q_type == 'numerical':
-                    try:
-                        is_correct = abs(float(user_val) - float(correct_ans)) <= 0.01
-                    except ValueError:
-                        is_correct = False
-                else:
-                    is_correct = (user_val == correct_ans)
-                
-                marks = 1.0 if is_correct else 0.0
-                
-            QuestionAttempt.objects.create(
-                session=session,
-                question_id=ans['id'],
-                user_answer=ans['value'],
-                is_correct=is_correct,
-                marks_obtained=marks 
-            )
-            
-            # SRS Spaced Repetition Integration
-            meta, _ = SRSMetadata.objects.get_or_create(
-                candidate=candidate,
-                card_id=q_id,
-                defaults={'next_review': timezone.now()}
-            )
-            if is_correct:
-                if ans.get('time_taken_seconds', 0) < 20:
-                    srs_service.update_card(meta, 5)
-            else:
-                srs_service.update_card(meta, 1)
-            
-            # Log Activity
-            from .models import UserActivity
-            UserActivity.objects.create(
-                candidate=candidate,
-                activity_type=1, # Question
-                concept_id=int(q_obj.get('module_id', 0)) if q_obj else 0
-            )
-
-        scoring_service.calculate_session_result(session)
-        result = scoring_service.check_aggregate_pass(session.candidate)
-        
-        return Response({
-            "score": session.final_score,
-            "is_pass": session.is_pass,
-            "aggregate_status": result[1]
-        })
-
-class AdminContentAPI(APIView):
-    """
-    Portal for pushing real-time regulatory updates (RBI Circulars, etc.)
-    In production, this would use a more robust OAuth2 scope.
-    """
-    def post(self, request):
-        secret_key = request.headers.get('X-Admin-Secret')
-        if secret_key != os.getenv('ADMIN_SECRET', 'caiib_secret_2026'):
-            return Response({"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-        content_type = request.data.get('type') # 'flashcard' or 'question'
-        payload = request.data.get('payload')
-        
-        if content_service.use_fallback:
-            return Response({
-                "status": "mock_push_success", 
-                "info": "MongoDB fallback active. Content not persisted but API response verified."
-            })
-
-        if content_type == 'flashcard':
-            # Add with high priority
-            payload['priority'] = 'high'
-            content_service.db.flashcards.insert_one(payload)
-            return Response({"status": "flashcard pushed", "id": str(payload.get('_id'))})
-        elif content_type == 'question':
-            content_service.db.questions.insert_one(payload)
-            return Response({"status": "question pushed"})
-            
-        return Response({"error": "invalid type"}, status=status.HTTP_400_BAD_REQUEST)
-
-class CaseStudyView(APIView):
-    """
-    Returns scenario-based case studies for a specific paper.
-    Each study contains a scenario and a set of dependent questions.
-    """
-    permission_classes = [permissions.AllowAny]
-
+class PaperBitesView(BaseAuthenticatedView):
     def get(self, request, paper_code):
-        case_studies = content_service.get_case_studies(paper_code)
-        return Response(case_studies)
+        bites = Bite.objects.filter(paper_code=paper_code).order_by('module', 'bite_id')
+        serializer = BiteSerializer(bites, many=True)
+        return Response(serializer.data)
+
+class DeleteAccountView(BaseAuthenticatedView):
+    def post(self, request):
+        user = request.user
+        user.delete() # Cascade ensures Candidate is also deleted
+        return Response({"status": "account deleted successfully"})
+
+class PingView(APIView):
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        return Response({"status": "pong"})
+
+

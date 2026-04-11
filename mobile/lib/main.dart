@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/home/dashboard_screen.dart';
+import 'screens/shell/main_shell.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -46,6 +46,12 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     return success;
   }
+
+  Future<void> logout() async {
+    await _apiService.clearSession();
+    isAuthenticated = false;
+    notifyListeners();
+  }
 }
 
 class ProgressProvider extends ChangeNotifier {
@@ -53,14 +59,24 @@ class ProgressProvider extends ChangeNotifier {
   Map<String, dynamic>? candidateData;
   Map<String, dynamic>? tracingData;
   bool isLoading = true;
+  int dueCount = 0;
 
   Future<void> fetchDashboardData() async {
     isLoading = true;
     notifyListeners();
     candidateData = await _apiService.getProgress();
     tracingData = await _apiService.getKnowledgeTracing();
+    dueCount = 0;
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<bool> updateElective(String elective) async {
+    final success = await _apiService.updateElective(elective);
+    if (success) {
+      await fetchDashboardData(); // Refresh all state
+    }
+    return success;
   }
 }
 
@@ -70,13 +86,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CAIIB ProBanker',
+      title: 'CAIIB Bitsize',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme, // Using our modern dark theme
+      theme: AppTheme.darkTheme,
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (auth.isAuthenticated) {
-            return const DashboardScreen();
+            return const MainShell();
           }
           return const LoginScreen();
         },

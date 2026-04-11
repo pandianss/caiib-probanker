@@ -1,0 +1,87 @@
+{
+  "paper_code": "ABM",
+  "bites": [
+    {
+      "id": "abm_sta_001",
+      "module": "Module A: Statistics",
+      "chapter": "Sampling Methods",
+      "title": "Central Limit Theorem (CLT)",
+      "concept": "The CLT states that the distribution of sample means approximates a normal distribution as the sample size becomes large (usually n > 30), regardless of the population's distribution shape. This allows us to use normal distribution statistics for non-normal populations.",
+      "example": "If you survey 100 people about their income (which is skewed), the average income of multiple such 100-person samples will follow a Bell Curve.",
+      "formula": "Standard Error = σ / √n",
+      "check_question": {
+        "type": "mcq",
+        "question": "According to the Central Limit Theorem, what happens to the Sampling Distribution of the Mean as the sample size (n) increases?",
+        "options": ["It becomes more skewed.", "It approaches a Normal Distribution.", "It becomes identical to the population distribution.", "The standard deviation increases."],
+        "answer": "It approaches a Normal Distribution.",
+        "explanation": "CLT ensures that for large samples, the mean's distribution is normal, even if the underlying population isn't."
+      },
+      "tags": ["ABM", "Statistics", "easy"]
+    },
+    {
+      "id": "abm_sta_002",
+      "module": "Module A: Statistics",
+      "chapter": "Linear Programming",
+      "title": "Graphical Method Constraints",
+      "concept": "Linear Programming (LP) is a mathematical technique for optimum allocation of scarce resources. In the Graphical Method, constraints are represented as lines, and the 'Feasible Region' is the area that satisfies all inequalities simultaneously.",
+      "example": "If a bank has limited staff and limited budget, each resource creates a constraint line on a graph of two loan products.",
+      "formula": "Objective Function: Max Z = C1X1 + C2X2",
+      "check_question": {
+        "type": "mcq",
+        "question": "In a Linear Programming problem, where is the optimal solution usually found if it exists?",
+        "options": ["In the middle of the feasible region.", "At one of the corner points of the feasible region.", "Outside the feasible region.", "At the origin (0,0)."],
+        "answer": "At one of the corner points of the feasible region.",
+        "explanation": "The Fundamental Theorem of LP states that if an optimal solution exists, it must occur at a vertex (corner) of the feasible region."
+      },
+      "tags": ["ABM", "Statistics", "medium"]
+    },
+    {
+      "id": "abm_hrm_001",
+      "module": "Module B: HRM",
+      "chapter": "Human Implications of Organizations",
+      "title": "Maslow's Hierarchy of Needs",
+      "concept": "Abraham Maslow proposed that human needs are organized in a hierarchy: Physiological, Safety, Social, Esteem, and Self-actualization. A person moves to the next level only after the lower-level needs are reasonably satisfied.",
+      "example": "A bank employee worried about job security (Safety) is unlikely to be motivated by an 'Employee of the Month' award (Esteem).",
+      "check_question": {
+        "type": "mcq",
+        "question": "In Maslow's hierarchy, which of the following is considered a 'Growth' need rather than a 'Deficiency' need?",
+        "options": ["Safety Needs", "Social Needs", "Esteem Needs", "Self-actualization"],
+        "answer": "Self-actualization",
+        "explanation": "Self-actualization is the desire for self-fulfillment and reaching one's full potential, categorized as a growth need."
+      },
+      "tags": ["ABM", "HRM", "easy"]
+    },
+    {
+      "id": "abm_cre_001",
+      "module": "Module C: Credit Management",
+      "chapter": "Analysis of Financial Statements",
+      "title": "Debt-Equity Ratio",
+      "concept": "This ratio measures the proportion of total assets financed by stockholders compared to creditors. It indicates the financial leverage and the long-term solvency of a company.",
+      "example": "A ratio of 1:1 means for every ₹1 of the owner's money, there is ₹1 of borrowed money. A ratio of 3:1 indicates high leverage and higher risk.",
+      "formula": "Debt-Equity Ratio = Total Long-term Debt / Shareholder's Equity",
+      "check_question": {
+        "type": "numerical",
+        "question": "A company has Total Liabilities of ₹500 Cr, of which Short-term Debt is ₹100 Cr and Long-term Debt is ₹300 Cr. Shareholder's Equity is ₹200 Cr. Calculate the Debt-Equity Ratio.",
+        "answer": "1.5",
+        "explanation": "D/E = Long-term Debt / Equity = 300 / 200 = 1.5."
+      },
+      "tags": ["ABM", "Credit", "medium"]
+    },
+    {
+      "id": "abm_com_001",
+      "module": "Module D: Compliance",
+      "chapter": "Compliance in Banks",
+      "title": "Role of Chief Compliance Officer (CCO)",
+      "concept": "The CCO is the head of the compliance department in a bank, responsible for identifying and managing compliance risks. The CCO must have a direct reporting line to either the MD & CEO or the Board/Audit Committee to ensure independence.",
+      "example": "If a new RBI regulation on KYC is released, the CCO ensures all branch processes are updated to meet the legal requirements.",
+      "check_question": {
+        "type": "mcq",
+        "question": "To ensure functional independence, to whom should the Chief Compliance Officer (CCO) ideally report?",
+        "options": ["The Head of Marketing", "The Head of Operations", "The Audit Committee of the Board (ACB)", "The Branch Manager"],
+        "answer": "The Audit Committee of the Board (ACB)",
+        "explanation": "Reporting to the Board or ACB ensures the compliance function remains independent from business targets/operations."
+      },
+      "tags": ["ABM", "Compliance", "medium"]
+    }
+  ]
+}

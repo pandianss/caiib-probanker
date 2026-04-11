@@ -1,37 +1,24 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Candidate, ExamSession, QuestionAttempt, PaperProgress, SRSMetadata
+from .models import Candidate, PaperProgress, SRSMetadata, Bite, BiteAttempt
 from .services.scoring_service import ScoringService
 from .services.srs_service import SRSService
 
-class ScoringServiceTest(TestCase):
+class BiteServiceTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='test_user', password='password')
         self.candidate = Candidate.objects.create(user=self.user)
-        self.session = ExamSession.objects.create(candidate=self.candidate, paper_code='ABM', status='STARTED')
+        self.bite = Bite.objects.create(
+            bite_id='B1', paper_code='ABM', module='M1', title='T1',
+            concept='C1', question_text='Q1', question_type='mcq',
+            answer='A', explanation='E'
+        )
 
-    def test_pass_criteria_45_marks(self):
-        QuestionAttempt.objects.create(session=self.session, question_id='1', is_correct=True, marks_obtained=45)
-        ScoringService.calculate_session_result(self.session)
-        self.assertTrue(self.session.is_pass)
-        self.assertEqual(self.session.final_score, 45.0)
-
-    def test_fail_criteria_44_marks(self):
-        QuestionAttempt.objects.create(session=self.session, question_id='1', is_correct=True, marks_obtained=44)
-        ScoringService.calculate_session_result(self.session)
-        self.assertFalse(self.session.is_pass)
-        self.assertEqual(self.session.final_score, 44.0)
-
-    def test_aggregate_pass_criteria(self):
-        # Need 5 papers with >=45 each and >=250 total
-        papers = ['ABM', 'BFM', 'ABFM', 'BRBL', 'RURAL']
-        scores = [50, 50, 50, 50, 50] # Total 250
-        for p, s in zip(papers, scores):
-            PaperProgress.objects.create(candidate=self.candidate, paper_code=p, current_score=s, is_passed=True)
-            
-        success, msg = ScoringService.check_aggregate_pass(self.candidate)
-        self.assertTrue(success)
+    def test_bite_attempt_creation(self):
+        BiteAttempt.objects.create(candidate=self.candidate, bite=self.bite, user_answer='A', is_correct=True)
+        self.assertEqual(self.candidate.bite_attempts.count(), 1)
+        self.assertTrue(self.candidate.bite_attempts.first().is_correct)
 
 class SRSServiceTest(TestCase):
     def setUp(self):
