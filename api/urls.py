@@ -4,7 +4,9 @@ from .views import (
     KnowledgeTracingView, TodaysBiteView, PaperBitesView, SubmitBiteView,
     RegisterView, TokenObtainPairView, TokenRefreshView, ProfileUpdateView,
     DeleteAccountView, PingView, CandidateStatsView, MasteredBiteIdsView,
-    DueBitesView, BiteHistoryView
+    DueBitesView, BiteHistoryView,
+    MarketplaceListView, PurchaseBundleView, MyOwnedBundlesView, BundleBitesView,
+    IngestPortalView, IngestUploadAPIView
 )
 
 urlpatterns = [
@@ -16,6 +18,12 @@ urlpatterns = [
     path('select-elective/', SelectElectiveView.as_view(), name='select-elective'),
     path('stats/', CandidateStatsView.as_view(), name='candidate-stats'),
     path('knowledge-tracing/', KnowledgeTracingView.as_view(), name='knowledge-tracing'),
+    path('marketplace/', MarketplaceListView.as_view(), name='marketplace-list'),
+    path('marketplace/purchase/', PurchaseBundleView.as_view(), name='marketplace-purchase'),
+    path('marketplace/my-bundles/', MyOwnedBundlesView.as_view(), name='marketplace-my-bundles'),
+    path('marketplace/bundle/<int:bundle_id>/bites/', BundleBitesView.as_view(), name='bundle-bites'),
+    path('admin/ingest/', IngestPortalView.as_view(), name='ingest-portal'),
+    path('admin/ingest/upload/', IngestUploadAPIView.as_view(), name='ingest-upload'),
     path('bites/today/', TodaysBiteView.as_view(), name='bites-today'),
     path('bites/mastered/', MasteredBiteIdsView.as_view(), name='mastered-bites'),
     path('bites/due/', DueBitesView.as_view(), name='due-bites'),

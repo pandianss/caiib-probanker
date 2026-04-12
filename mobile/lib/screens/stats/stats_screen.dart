@@ -103,7 +103,6 @@ class StatsScreen extends StatelessWidget {
                   );
                 }).toList(),
               ),
-),
               
               const SizedBox(height: 48),
               const Text('MASTERY BY PAPER', style: TextStyle(fontSize: 13, color: Color(0xFF8B949E), fontWeight: FontWeight.bold, letterSpacing: 1.2)),

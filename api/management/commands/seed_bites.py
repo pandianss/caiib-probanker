@@ -24,8 +24,11 @@ class Command(BaseCommand):
                     
                 paper_code = data.get('paper_code', '')
                 bites = data.get('bites', [])
+                total_bites = len(bites)
+                free_limit = total_bites // 2 # Half of the bites are free
                 
-                for b in bites:
+                for idx, b in enumerate(bites):
+                    is_free = idx < free_limit
                     check = b.get('check_question', {})
                     Bite.objects.update_or_create(
                         bite_id=b['id'],
@@ -47,6 +50,7 @@ class Command(BaseCommand):
                             'bite_type': 'numerical' if check.get('type') == 'numerical' else 'conceptual',
                             'estimated_minutes': b.get('estimated_minutes', 5),
                             'tags': b.get('tags', []),
+                            'is_free': is_free
                         }
                     )
                     bites_seeded += 1

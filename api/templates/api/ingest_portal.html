@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingest Portal | CAIIB ProBanker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .drop-zone { border: 2px dashed rgba(255, 255, 255, 0.2); transition: all 0.3s ease; }
+        .drop-zone:hover, .drop-zone.active { border-color: #38bdf8; background: rgba(56, 189, 248, 0.05); }
+        .terminal { background: #020617; border: 1px solid #1e293b; font-family: 'Courier New', Courier, monospace; }
+        .log-success { color: #4ade80; }
+        .log-error { color: #f87171; }
+        .log-info { color: #38bdf8; }
+    </style>
+</head>
+<body class="min-h-screen p-8 flex flex-col items-center">
+    
+    <!-- Header -->
+    <header class="w-full max-w-4xl mb-12 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight">Ingest Portal v3</h1>
+            <p class="text-slate-400 mt-1">High-Fidelity Content Command Center</p>
+        </div>
+        <div class="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700">
+            <i data-lucide="shield-check" class="text-sky-400 w-5 h-5"></i>
+            <span class="text-sm font-semibold">Admin Authenticated</span>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Controls -->
+        <div class="md:col-span-1 space-y-6">
+            <div class="glass p-6 rounded-2xl">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="settings-2" class="w-5 h-5"></i> Configuration
+                </h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Authentication</label>
+                        <input type="password" id="adminSecret" placeholder="Enter Secret Key" 
+                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 transition-all outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Target Subject</label>
+                        <select id="paperCode" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                            <option value="AUTO">Detect from JSON</option>
+                            <option value="ABM">ABM</option>
+                            <option value="BFM">BFM</option>
+                            <option value="ABFM">ABFM</option>
+                            <option value="BRBL">BRBL</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-2">
+                        <input type="checkbox" id="autoBundle" checked 
+                               class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500">
+                        <label for="autoBundle" class="text-sm text-slate-300">Auto-Sync Bundle</label>
+                    </div>
+                </div>
+            </div>
+
+            <button id="ingestBtn" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold py-4 rounded-xl transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                PERFORM INJECTION
+            </button>
+        </div>
+
+        <!-- Right Column: Drop Zone & Logs -->
+        <div class="md:col-span-2 space-y-6">
+            <!-- Drop Zone -->
+            <div id="dropZone" class="glass drop-zone h-48 rounded-2xl flex flex-col items-center justify-center cursor-pointer">
+                <i data-lucide="upload-cloud" class="w-10 h-10 text-slate-500 mb-4"></i>
+                <p class="text-slate-300 font-semibold" id="dropLabel">Drag & drop curriculum JSON</p>
+                <p class="text-slate-500 text-xs mt-1">or click to browse filesystem</p>
+                <input type="file" id="fileInput" class="hidden" accept=".json">
+            </div>
+
+            <!-- Terminal -->
+            <div class="glass rounded-2xl overflow-hidden flex flex-col h-80">
+                <div class="bg-slate-800/80 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Process Log</span>
+                    <button class="text-slate-500 hover:text-white" onclick="document.getElementById('logOutput').innerHTML = ''">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div id="logOutput" class="terminal p-4 text-xs flex-1 overflow-y-auto space-y-1">
+                    <p class="log-info">> System initialised. Awaiting curriculum payload...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const ingestBtn = document.getElementById('ingestBtn');
+        const logOutput = document.getElementById('logOutput');
+        let selectedFile = null;
+
+        function addLog(msg, type = 'info') {
+            const p = document.createElement('p');
+            p.className = `log-${type}`;
+            p.innerText = `> [${new Date().toLocaleTimeString()}] ${msg}`;
+            logOutput.appendChild(p);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        dropZone.onclick = () => fileInput.click();
+        
+        fileInput.onchange = (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                document.getElementById('dropLabel').innerText = selectedFile.name;
+                addLog(`File loaded: ${selectedFile.name}`, 'info');
+            }
+        };
+
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('active'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('active');
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            if (e.dataTransfer.files.length > 0) {
+                selectedFile = e.dataTransfer.files[0];
+                document.getElementById('dropLabel').innerText = selectedFile.name;
+                addLog(`File dropped: ${selectedFile.name}`, 'info');
+            }
+        };
+
+        ingestBtn.onclick = async () => {
+            const secret = document.getElementById('adminSecret').value;
+            if (!selectedFile) { alert('Please select a JSON file.'); return; }
+            if (!secret) { alert('Admin secret required.'); return; }
+
+            ingestBtn.disabled = true;
+            addLog(`Starting ingestion for ${selectedFile.name}...`, 'info');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('secret', secret);
+            formData.append('paper_code', document.getElementById('paperCode').value);
+            formData.append('auto_bundle', document.getElementById('autoBundle').checked);
+
+            try {
+                const response = await fetch('/api/admin/ingest/upload/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addLog(`Success! Ingested ${result.count} bites.`, 'success');
+                    if (result.bundle_id) addLog(`Sync: Marketplace bundle updated.`, 'success');
+                } else {
+                    addLog(`Error: ${result.error}`, 'error');
+                }
+            } catch (err) {
+                addLog(`Network failed: ${err.message}`, 'error');
+            } finally {
+                ingestBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

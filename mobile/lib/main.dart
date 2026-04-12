@@ -5,8 +5,21 @@ import 'screens/auth/login_screen.dart';
 import 'screens/shell/main_shell.dart';
 import 'services/api_service.dart';
 
+import 'services/notification_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Notifications
+  final notificationService = NotificationService();
+  try {
+    await notificationService.init();
+    await notificationService.requestPermissions();
+    await notificationService.scheduleDailyReminder(hour: 21, minute: 0);
+  } catch (e) {
+    debugPrint("Notifications not supported on this platform: $e");
+  }
+
   final authProvider = AuthProvider();
   await authProvider.checkToken();
   runApp(

@@ -253,6 +253,66 @@ class ApiService {
     }
   }
 
+  Future<List<dynamic>?> getMarketplaceBundles() async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/marketplace/'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> purchaseBundle(int bundleId) async {
+    final token = await _getValidToken();
+    if (token == null) return false;
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/marketplace/purchase/'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'bundle_id': bundleId}),
+      ).timeout(const Duration(seconds: 10));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<List<dynamic>?> getMyOwnedBundles() async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/marketplace/my-bundles/'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<dynamic>?> getBitesByBundle(int bundleId) async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/marketplace/bundle/$bundleId/bites/'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> deleteAccount() async {
     final token = await _getValidToken();
     if (token == null) return false;

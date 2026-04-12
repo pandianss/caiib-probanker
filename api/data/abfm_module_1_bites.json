@@ -1,0 +1,395 @@
+{
+  "paper_code": "ABFM_Core_Management_Theories_and_Leadership",
+  "bites": [
+    {
+      "id": "abfm_c1_001",
+      "title": "The Core Functions of Management",
+      "concept": "Management involves deciding in advance what needs to be done and taking a call on the future [1]. It consists of five key functions: Planning, Organising, Staffing, Directing, and Controlling [1]. Planning determines the objectives and future course of action, while controlling ensures that activities remain on track by measuring actual performance and comparing it against pre-decided standards [1, 2].",
+      "check_question": {
+        "question": "What are the five core functions of the management process?",
+        "answer": "Planning, Organising, Staffing, Directing, and Controlling [1].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_002",
+      "title": "Behavioural School: McGregor's X and Y Theory",
+      "concept": "Douglas McGregor's Theory X and Theory Y provide crucial insights into two differing aspects of human behaviour at work [3]. Theory X assumes that the average human being is inherently lazy, dislikes work, avoids responsibility, and requires close supervision [3]. In contrast, Theory Y assumes that work is as natural as play, and that people can be self-directed, highly creative, and responsible if appropriately motivated [4].",
+      "check_question": {
+        "question": "Which behavioural theory assumes that human beings inherently dislike work and require close external control?",
+        "answer": "Theory X [3].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_003",
+      "title": "The Learning Organisation",
+      "concept": "A learning organisation continuously enhances its capacity to grow, adapt, and learn to survive in a dynamic competitive environment [5]. Peter Senge defined its five primary disciplines as Personal Mastery, Shared Vision, Mental Models, Team Learning, and Systems Thinking [5, 6]. Such an organisation relies on empowered employees collaborating in problem-solving and an open information system rather than strict top-down compliance [5].",
+      "check_question": {
+        "question": "What are the five disciplines of a learning organization according to Peter Senge?",
+        "answer": "Personal Mastery, Shared Vision, Mental Models, Team Learning, and Systems Thinking [5, 6].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_004",
+      "title": "Management by Objectives (MBO)",
+      "concept": "Coined by Peter F. Drucker in 1954, Management by Objectives (MBO) is a collaborative goal-setting process where management and employees jointly establish, record, and monitor measurable goals [7]. It uses continuous feedback and formal evaluation meetings to track progress [8, 9]. However, a major limitation is that it can be highly time-consuming and risks emphasizing goals over actual operational issues [9, 10].",
+      "check_question": {
+        "question": "What is the primary procedure involved in Management by Objectives (MBO)?",
+        "answer": "It involves management and employees working together to jointly establish, record, and monitor goals for a specific period [7].",
+        "type": "applied"
+      }
+    },
+    {
+      "id": "abfm_c1_005",
+      "title": "PESTLE Analysis for Environmental Scanning",
+      "concept": "PESTLE analysis is an indispensable strategic tool used to evaluate the external business environment and its potential impact on performance [11]. The acronym stands for Political, Economic, Social (or Socio-Cultural), Technological, Legal, and Environmental factors [11-13]. This framework helps strategic planners systematically identify both potential benefits and impending dangers before defining organisational goals [11].",
+      "check_question": {
+        "question": "What do the letters in the PESTLE acronym stand for?",
+        "answer": "Political, Economic, Social, Technological, Legal, and Environmental [11].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_006",
+      "title": "Organising Principles: Chain of Command & Span of Control",
+      "concept": "The Chain of Command is the continuous line of authority from top management down to every individual, primarily relying on the Scalar Principle and Unity of Command (each worker reports to only one manager) [14, 15]. Span of Control refers to the total number of direct subordinates under a single manager's supervision [15]. A wide span allows for greater employee independence, while a narrow span facilitates closer monitoring [15, 16].",
+      "check_question": {
+        "question": "What does the principle of 'Unity of Command' dictate?",
+        "answer": "It dictates that each worker should have just one manager or reporting authority to eliminate conflicting instructions [15].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_007",
+      "title": "Types of Organisational Culture",
+      "concept": "Organisational culture comprises the underlying values, beliefs, and unwritten rules that create a company's unique psychological environment [17]. It is broadly classified into four types: Clan Culture (highly collaborative and family-like), Adhocracy Culture (dynamic, innovative, and entrepreneurial), Market Culture (competitive and intensely results-oriented), and Hierarchy Culture (structured, formal, and controlled) [17].",
+      "check_question": {
+        "question": "Which type of organisational culture focuses predominantly on market share, profitability, and gaining a competitive edge?",
+        "answer": "The Culture of the Market (or Market Culture) [17].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_008",
+      "title": "Lewin's Change Management Model",
+      "concept": "Social psychologist Kurt Lewin developed a highly successful three-phase model for structural and organisational change using the analogy of a block of ice: Unfreeze, Change, and Refreeze [18, 19]. 'Unfreeze' prepares the organisation by breaking down the status quo; 'Change' involves the actual transition through clear communication; and 'Refreeze' stabilizes the new behaviors to prevent regression [19].",
+      "check_question": {
+        "question": "What is the primary purpose of the 'Refreeze' stage in Lewin's Change Management Model?",
+        "answer": "To establish stability and ensure that the newly implemented changes are harnessed into the normal daily routine [19].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_009",
+      "title": "Knowledge Management: The SECI Model",
+      "concept": "The SECI Model, developed by Nonaka and Takeuchi, outlines four critical components of knowledge management: Socialisation, Externalisation, Combination, and Internalisation [20]. The cycle moves from sharing implicit knowledge (Socialisation) to structuring it (Externalisation), updating it using experts (Combination), and finally allowing employees to absorb and practically apply the knowledge (Internalisation) [20, 21].",
+      "check_question": {
+        "question": "Which stage of the SECI model focuses on employees absorbing learned information and directly applying it to their work?",
+        "answer": "Internalisation [21].",
+        "type": "applied"
+      }
+    },
+    {
+      "id": "abfm_c1_010",
+      "title": "Behaviourally Anchored Rating Scales (BARS)",
+      "concept": "BARS is a modern performance appraisal technique designed to reduce subjectivity by anchoring ratings in specific behavioural examples [22]. The standard procedure involves generating critical incidents of effective and ineffective behaviour, developing performance dimensions, reallocating these incidents, scaling them, and finally developing the evaluation instrument [22, 23].",
+      "check_question": {
+        "question": "What are the first two foundational steps in developing a Behaviourally Anchored Rating Scale (BARS)?",
+        "answer": "Generating critical incidents of behaviour and developing clear performance dimensions [22].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_011",
+      "title": "Leadership Models: Transactional vs. Transformational",
+      "concept": "Transactional leadership focuses on routines, utilizing rewards and punishments to achieve specific tasks, but it may inhibit long-term creativity [24]. In contrast, Transformational leadership involves a leader inspiring followers with a clear vision and empowering them to achieve the goal, which often results in lower employee turnover and higher morale [25].",
+      "check_question": {
+        "question": "Which leadership model primarily uses a system of incentives and admonitions to manage existing routines rather than creating radical changes?",
+        "answer": "Transactional Leadership [24].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_012",
+      "title": "Vroom's Expectancy Theory of Motivation",
+      "concept": "Victor Vroom's Expectancy Theory postulates that an individual's motivation (M) is the product of three elements: Valence (V), Expectancy (E), and Instrumentality (I) [26, 27]. Motivation is determined by how much an individual values the reward (Valence), their belief that greater effort leads to successful results (Expectancy), and their trust that success will actually trigger the reward (Instrumentality) [26, 27].",
+      "check_question": {
+        "question": "According to Vroom's Expectancy Theory, what does the term 'Instrumentality' signify?",
+        "answer": "It refers to the degree to which individuals believe that achieving desired outcomes will reliably result in receiving the promised rewards [26, 27].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_013",
+      "title": "The Timing of Control Management",
+      "concept": "Control management regulates activities based on timing and can be broadly divided into three types: Feedback, Proactive, and Concurrent [28]. Feedback control relies on data after an activity is completed; Proactive (or feedforward) control anticipates problems in advance; and Concurrent control monitors activities in real-time as they are being carried out [28].",
+      "check_question": {
+        "question": "Which type of control is based on the real-time engagement of the controller while the activity is actually being executed?",
+        "answer": "Concurrent control [28].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_014",
+      "title": "Modern Control Techniques: PERT & CPM",
+      "concept": "PERT (Program Evaluation and Review Technique) and CPM (Critical Path Method) are modern control techniques used to map out scheduling and project execution [29]. PERT represents activities in appropriate sequences, while CPM identifies essential tasks to determine scheduling flexibilities [29]. The 'critical path' is the longest sequence of activities that must finish on time for the entire project to be completed [29].",
+      "check_question": {
+        "question": "In project management, how is the 'critical path' defined?",
+        "answer": "It is the longest sequence of activities that must be finished on time in order for the entire project to be complete [29].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_015",
+      "title": "Plan vs. Strategy",
+      "concept": "A plan is a concrete arrangement or scheme for a definite purpose that does not easily allow for deviation [1]. In contrast, a strategy is a flexible blueprint or design open for adaptation when needed, especially when creativity, collaboration, and innovation are paramount [1, 2].",
+      "check_question": {
+        "question": "What is the primary difference in flexibility between a plan and a strategy?",
+        "answer": "A plan is concrete and does not allow for deviation, whereas a strategy is highly flexible and open to adaptation [1, 2].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_016",
+      "title": "Four Phases of Strategic Management",
+      "concept": "Business entities develop strategy through four phases: Basic Budgetary Planning (annual financial planning), Forecast-based Planning (long-term multi-year models), Externally Oriented Planning (top-down strategy formulated by top executives and consultants), and Strategic Management (involving managers at all levels for dynamic, integrated planning) [3, 4].",
+      "check_question": {
+        "question": "Which phase of strategic management relies heavily on outside consultants and a top-down approach from key executives?",
+        "answer": "Externally Oriented (Strategic) Planning [3, 4].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_017",
+      "title": "Vision and Mission Statements",
+      "concept": "In strategic formulation, a vision statement is forward-looking and identifies the desired long-term status, answering the question, \"What do we want to become?\" [5]. A mission statement spells out the underlying motivation for being in business and the contribution to society the firm aspires to make [5].",
+      "check_question": {
+        "question": "Which strategic statement primarily spells out a firm's underlying motivation and its contribution to society?",
+        "answer": "The Mission Statement [5].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_018",
+      "title": "Steps in the Planning Process",
+      "concept": "The core steps in planning include: Opportunity Analysis, Objective Establishment, Developing Planning Premises (assumptions about the future), Alternatives Identification, Evaluating Alternatives, Selecting the Best Alternative, Formulating Derivative Plans, and finally, Follow-up and Review [6, 7].",
+      "check_question": {
+        "question": "What is meant by 'Developing Planning Premises' in the planning process?",
+        "answer": "It is the collection of future forecasting-derived assumptions upon which the plans are based [6].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_019",
+      "title": "Contingency Planning",
+      "concept": "Contingency plans, or \"Plan B\", are alternative courses of action put into effect if unforeseen events disrupt the original strategy [8]. They minimize risk by specifying trigger points, assessing impact, and developing alternate financially feasible paths to deal with both catastrophes and everyday issues like data or staff loss [8, 9].",
+      "check_question": {
+        "question": "What is the role of 'trigger points' in contingency planning?",
+        "answer": "Trigger points are specified events or metrics that, when hit, indicate it is time to put the alternative contingent plan into effect [8, 9].",
+        "type": "applied"
+      }
+    },
+    {
+      "id": "abfm_c1_020",
+      "title": "Forecasting Timeframes",
+      "concept": "Forecasting can be divided into three timeframes: Long Term (3-5 years) for asset management and leveraging, Medium Term for operational and business budgeting, and Short Term (1-6 months) for immediate preventative action and performance analysis [9, 10].",
+      "check_question": {
+        "question": "Which forecasting timeframe is typically utilized for operational and business budgeting?",
+        "answer": "Medium Term Forecasts [10].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_021",
+      "title": "Decision-Making Scenarios",
+      "concept": "Managerial decisions are made under three scenarios: Certainty (exact outcomes are known), Risk (partial information exists, so objective or subjective probabilities are assigned to outcomes), and Uncertainty (probabilities cannot be assigned at all because there is no way to measure the likelihood) [11].",
+      "check_question": {
+        "question": "How does a 'Risk' scenario differ from an 'Uncertainty' scenario in decision-making?",
+        "answer": "In a Risk scenario, probabilities can be assigned to estimated outcomes; in an Uncertainty scenario, probabilities cannot be assigned at all [11].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_022",
+      "title": "Centralised vs. Decentralised Organizations",
+      "concept": "In a centralised structure, key decisions and strategic direction are controlled by a single individual or top management, which provides clarity but can lead to rigidity [12]. A decentralised organization delegates decision-making to lower and middle management, resulting in faster response times and improved employee morale, but risks operational inconsistency [13].",
+      "check_question": {
+        "question": "What is a major disadvantage of a decentralised organizational structure?",
+        "answer": "It can lead to inconsistency in operations, duplication of efforts, and individual divisions becoming self-centered fiefdoms [13].",
+        "type": "applied"
+      }
+    },
+    {
+      "id": "abfm_c1_023",
+      "title": "Line and Staff Organization",
+      "concept": "In a line and staff organization, line executives hold the authority of command and implement plans, while staff supervisors and specialists act in an advisory capacity to guide and counsel them [14]. This structure provides expert advice but can lead to conflicts, confusion, and resentment between line and staff authorities [15, 16].",
+      "check_question": {
+        "question": "In a Line and Staff organization, which group retains the ultimate authority of command?",
+        "answer": "The line executives [14, 15].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_024",
+      "title": "Functional Organization",
+      "concept": "Proposed by F.W. Taylor, a functional organization divides activities into functional departments where specialists direct subordinates across the organization in their respective fields [16, 17]. The principle of 'unity of command' does not apply here, as workers receive commands from multiple functional managers, which can sometimes cause confusion and weak disciplinary control [17].",
+      "check_question": {
+        "question": "Why does the principle of 'unity of command' not apply to a functional organization?",
+        "answer": "Because subordinates receive commands from multiple different functional specialists or managers rather than just one superior [17].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_025",
+      "title": "Committee Organization",
+      "concept": "A committee organization pools together individuals with various forms of expertise to solve complex issues through collective decision-making [18, 19]. While it improves decision quality and promotes participative management, it can also cause delays, create conflicts, and result in divided accountability where no single person takes the blame [19, 20].",
+      "check_question": {
+        "question": "What is the primary drawback related to accountability in a committee organization?",
+        "answer": "There is a division of accountability, meaning no single member assumes personal responsibility for an incorrect decision made by the committee [20].",
+        "type": "applied"
+      }
+    },
+    {
+      "id": "abfm_c1_026",
+      "title": "On-the-job vs. Off-the-job Training",
+      "concept": "On-the-job training instructs workers while they perform regular duties using real-world scenarios, such as job rotation or mentoring, making it straightforward and cost-effective [21]. Off-the-job training (or vestibule training) occurs away from the normal workplace through workshops or seminars and is ideal for training a large number of people quickly [21].",
+      "check_question": {
+        "question": "What is another term used to describe off-the-job training that mimics actual working conditions in a separate location?",
+        "answer": "Vestibule training [21].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_027",
+      "title": "McClelland's Needs Theory of Motivation",
+      "concept": "David McClelland's theory identifies three fundamental human needs that motivate behavior: the Need for Power (the desire to influence and control others), the Need for Affiliation (the desire for pleasant social ties and acceptance), and the Need for Achievement (the drive to take calculated risks and succeed for intrinsic reward) [22].",
+      "check_question": {
+        "question": "According to McClelland, individuals who are vocal, assertive, and enjoy taking leadership roles to direct others primarily exhibit which need?",
+        "answer": "The Need for Power [22].",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_028",
+      "title": "Traditional vs. Modern Control Techniques",
+      "concept": "Control techniques monitor activities and apply corrections. Traditional techniques include Personal Observation, Break-even Analysis, Statistical Reports, and Budgetary Control [23, 24]. Modern techniques involve Return on Investment (ROI), Financial Statement & Ratio Analysis, Responsibility Accounting, PERT & CPM, Management Information Systems (MIS), and Management Audits [25-27].",
+      "check_question": {
+        "question": "Are PERT and CPM considered traditional or modern control techniques?",
+        "answer": "Modern control techniques [26].",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_029",
+      "title": "The Five Sources of Authority",
+      "concept": "The five sources of authority are Legitimate, Coerciveness, Rewarding, Expertise, and Referent [1]. Legitimate authority originates from cultural obligations and positional status, while coerciveness is based on the fear of punishment [1]. Rewarding authority comes from the ability to provide incentives, expertise relies on specialised knowledge, and referent authority is built on the faith, admiration, and high esteem followers have for a leader [1].",
+      "check_question": {
+        "question": "According to the sources of authority, what is 'Referent Authority' based on?",
+        "answer": "It is based on the faith, admiration, and high esteem in which a leader is held by their subordinates.",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_030",
+      "title": "Change Management: Nudge Theory and ADKAR Model",
+      "concept": "The Nudge Theory involves gently pushing and motivating individuals to make a change [2, 3]. The ADKAR Model is a goal-oriented tool outlining five sequential steps for change: Consciousness (regarding the requirement for change), Desire, Knowledge, Capability, and Reinforcement [3].",
+      "check_question": {
+        "question": "What does the acronym ADKAR stand for in the context of change management?",
+        "answer": "Consciousness, Desire, Knowledge, Capability, and Reinforcement.",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_031",
+      "title": "Change Management: Bridges' and Kubler-Ross Models",
+      "concept": "Bridges' Transition Model focuses on progression rather than modification, utilizing three steps: End/let go, Neutral zone, and New beginning [3]. The Kubler-Ross Five Stage Model outlines emotional states during major transitions: Denial, Anger, Bargaining, Depression, and Acceptance [4].",
+      "check_question": {
+        "question": "What are the five stages of emotional response to change according to the Kubler-Ross Model?",
+        "answer": "Denial, Anger, Bargaining, Depression, and Acceptance.",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_032",
+      "title": "Conflict Resolution Strategies",
+      "concept": "Effective conflict management involves five key strategies [5]. These strategies are: refraining from ignoring the conflict, clearly explaining the nature of the issue, organising a meeting between the involved parties to discuss impartially, identifying a mutual solution, and maintaining vigilance to follow up on the resolution [5-8].",
+      "check_question": {
+        "question": "Why is it highly advised not to ignore conflicts in the workplace?",
+        "answer": "Ignored conflicts tend to worsen over time and often resurface at inopportune moments.",
+        "type": "applied"
+      }
+    },
+    {
+      "id": "abfm_c1_033",
+      "title": "Advanced Types of Recruitment",
+      "concept": "Beyond internal hiring, organisations use various recruitment strategies [9]. Retained Recruiting involves an upfront fee for an exclusive partnership, while Contingency Recruiting requires payment only upon a successful hire [9]. Outplacement assists former employees in finding new jobs, and Reverse Recruiting encourages an employee to seek employment elsewhere that better fits their skillset [9, 10].",
+      "check_question": {
+        "question": "How does contingency recruiting fundamentally differ from retained recruiting?",
+        "answer": "In contingency recruiting, the recruiting firm is only compensated when a candidate is hired, whereas retained recruiting requires an upfront fee.",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_034",
+      "title": "Managing Generational Diversity",
+      "concept": "Workplaces now span multiple generations, which brings advantages like improved problem-solving and diverse market understanding [11]. Best practices for managing this diversity include: not making assumptions based on age, avoiding generational labels, regularly reviewing one's own unconscious biases, focusing on individuals rather than trends, and acknowledging and celebrating differences [11, 12].",
+      "check_question": {
+        "question": "What is a major organizational advantage of having a multigenerational workforce?",
+        "answer": "It improves problem-solving by bringing different generational perspectives and helps the organisation better understand diverse consumer audiences.",
+        "type": "applied"
+      }
+    },
+    {
+      "id": "abfm_c1_035",
+      "title": "Alderfer’s ERG Theory of Motivation",
+      "concept": "Developed by Clayton Alderfer, the ERG Theory condenses Maslow's hierarchy into a three-factor model [13]. The three requirements that drive human behavior are Existence (physical and mental well-being), Relatedness (sense of community and healthy relationships), and Growth (self-development and fulfilling potential) [13, 14].",
+      "check_question": {
+        "question": "What are the three core needs identified in Alderfer’s ERG Theory?",
+        "answer": "Existence, Relatedness, and Growth.",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_036",
+      "title": "Equity Theory and Porter-Lawler's Model",
+      "concept": "John S. Adams' Equity Theory posits that workers are motivated by a sense of fairness, balancing what they give and receive against their co-workers' inputs and outcomes [15]. The Porter and Lawler Model suggests a complex relationship where successful performance can result in a feeling of satisfaction if the reward system is successful [15].",
+      "check_question": {
+        "question": "According to Equity Theory, how do employees determine their level of relational satisfaction?",
+        "answer": "By striking a balance between what they contribute to an organisation and what they receive, compared to the perceived inputs and outputs of their co-workers.",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_037",
+      "title": "The Five Levels of Communication",
+      "concept": "Communication can be broken down into five fundamental levels [16]. These are Extra-personal (interactions between humans and non-human entities), Interpersonal (between two people), Intrapersonal (talking to oneself or self-reflection), Organizational (filtering up, down, or horizontally), and Mass Communication (using media to reach large audiences) [16].",
+      "check_question": {
+        "question": "What is intrapersonal communication?",
+        "answer": "It refers to internal communication or 'talking to oneself,' such as self-reflection or internal decision-making.",
+        "type": "factual"
+      }
+    },
+    {
+      "id": "abfm_c1_038",
+      "title": "IT Controls in Management: ITGC vs. ITAC",
+      "concept": "Information Technology controls ensure business goals are met securely [17]. IT General Controls (ITGC) govern the overall IT environment, including access policies, physical security, and system development life cycles [18]. IT Application Controls are automated within specific software to ensure data validity, completeness, and proper authorization during transaction processing [18, 19].",
+      "check_question": {
+        "question": "What is the primary difference between IT General Controls (ITGC) and IT Application Controls?",
+        "answer": "ITGCs cover the overall IT environment and operations, while Application Controls are specific, automated checks within a software program to ensure accurate transaction processing.",
+        "type": "conceptual"
+      }
+    },
+    {
+      "id": "abfm_c1_039",
+      "title": "COBIT and COSO Frameworks",
+      "concept": "COBIT (Control Objectives for Information Technology) is an IT governance framework featuring four domains: Planning and organising, Acquiring and implementing, Delivering and supporting, and Monitoring and evaluating [19]. The COSO framework identifies five components of internal control: control environment, risk assessment, control activities, information and communication, and monitoring [19].",
+      "check_question": {
+        "question": "What are the five components of internal control identified by the COSO framework?",
+        "answer": "Control environment, risk assessment, control activities, information and communication, and monitoring.",
+        "type": "factual"
+      }
+    }
+  ]
+}

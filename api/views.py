@@ -1,4 +1,8 @@
 import os
+import json
+from django.views.generic import TemplateView
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -117,11 +121,13 @@ class TodaysBiteView(BaseAuthenticatedView):
         # 2. Find next unseen bite from weakest paper
         seen_ids = BiteAttempt.objects.filter(candidate=candidate).values_list('bite__bite_id', flat=True).distinct()
         weakest = candidate.progress.order_by('current_score').first()
-        paper_filter = weakest.paper_code if weakest else candidate.selected_elective or 'ABM'
+        paper_filter = weakest.paper_code if weakest else candidate.selected_elective or 'ABFM'
         
         bite = Bite.objects.exclude(bite_id__in=seen_ids).filter(paper_code=paper_filter).first()
-        if not bite:
-            bite = Bite.objects.exclude(bite_id__in=seen_ids).first()
+        
+        # Fallback if selected paper has no more bites but ABFM does
+        if not bite and paper_filter != 'ABFM':
+            bite = Bite.objects.exclude(bite_id__in=seen_ids).filter(paper_code='ABFM').first()
         
         if not bite:
             return Response({'message': 'all_bites_seen', 'total_bites': Bite.objects.count()})
@@ -202,6 +208,12 @@ class SubmitBiteView(BaseAuthenticatedView):
 class CandidateProgressView(BaseAuthenticatedView):
     def get(self, request):
         candidate = self.get_candidate(request)
+        
+        # Auto-initialize progress trackers for any paper that has bites
+        active_papers = Bite.objects.values_list('paper_code', flat=True).distinct()
+        for p_code in active_papers:
+            PaperProgress.objects.get_or_create(candidate=candidate, paper_code=p_code)
+            
         serializer = CandidateSerializer(candidate)
         return Response(serializer.data)
 
@@ -324,6 +336,68 @@ class BiteHistoryView(BaseAuthenticatedView):
             'attempted_at': a.attempted_at,
         } for a in attempts])
 
+from .models import (
+    Candidate, PaperProgress, SRSMetadata, Bite, BiteAttempt,
+    MarketplaceBundle, BundleAccess
+)
+from .serializers import (
+    CandidateSerializer, PaperProgressSerializer, SRSMetadataSerializer, 
+    BiteSerializer, BiteListSerializer, BiteDetailSerializer,
+    MarketplaceBundleSerializer
+)
+
+class MarketplaceListView(BaseAuthenticatedView):
+    """List all bundles that have been verified by admin."""
+    def get(self, request):
+        bundles = MarketplaceBundle.objects.filter(status='verified').order_by('-created_at')
+        serializer = MarketplaceBundleSerializer(bundles, many=True)
+        return Response(serializer.data)
+
+class PurchaseBundleView(BaseAuthenticatedView):
+    """Mock purchase logic — in production, this would verify Razorpay payment."""
+    def post(self, request):
+        candidate = self.get_candidate(request)
+        bundle_id = request.data.get('bundle_id')
+        transaction_id = request.data.get('transaction_id', 'MOCK_TXN_000')
+
+        try:
+            bundle = MarketplaceBundle.objects.get(id=bundle_id, status='verified')
+        except MarketplaceBundle.DoesNotExist:
+            return Response({'error': 'Verified bundle not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Create access
+        BundleAccess.objects.get_or_create(
+            candidate=candidate, 
+            bundle=bundle,
+            defaults={'transaction_id': transaction_id}
+        )
+
+        return Response({'status': 'purchase successful', 'bundle_id': bundle_id})
+
+class MyOwnedBundlesView(BaseAuthenticatedView):
+    """List bundles the user has already purchased."""
+    def get(self, request):
+        candidate = self.get_candidate(request)
+        owned_access = BundleAccess.objects.filter(candidate=candidate).select_related('bundle')
+        bundles = [access.bundle for access in owned_access]
+        serializer = MarketplaceBundleSerializer(bundles, many=True)
+        return Response(serializer.data)
+
+class BundleBitesView(BaseAuthenticatedView):
+    """List bites within a specific bundle — requires ownership or verified status."""
+    def get(self, request, bundle_id):
+        candidate = self.get_candidate(request)
+        try:
+            bundle = MarketplaceBundle.objects.get(id=bundle_id)
+            # Access check removed to allow roadmap preview. 
+            # Redaction of premium content is now handled by the Serializer logic.
+            
+            bites = Bite.objects.filter(bundle=bundle).order_by('module', 'bite_id')
+            serializer = BiteListSerializer(bites, many=True)
+            return Response(serializer.data)
+        except MarketplaceBundle.DoesNotExist:
+            return Response({'error': 'Bundle not found'}, status=status.HTTP_404_NOT_FOUND)
+
 class DeleteAccountView(BaseAuthenticatedView):
     def post(self, request):
         user = request.user
@@ -336,3 +410,93 @@ class PingView(APIView):
         return Response({"status": "pong"})
 
 
+class IngestPortalView(TemplateView):
+    template_name = 'api/ingest_portal.html'
+
+class IngestUploadAPIView(APIView):
+    permission_classes = [permissions.AllowAny] # We use custom secret key auth
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        secret = request.data.get('secret')
+        # Simple secret check (matches setting or default)
+        if secret != getattr(settings, 'ADMIN_SECRET', 'dev_secret'):
+            return Response({'error': 'Unauthorized: Invalid Admin Secret'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        file_obj = request.FILES.get('file')
+        if not file_obj:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            data = json.load(file_obj)
+            paper_code = request.data.get('paper_code')
+            if paper_code == 'AUTO' or not paper_code:
+                paper_code = data.get('paper_code', 'UNKNOWN')
+            
+            # Normalize paper_code to standard short codes if descriptive
+            if 'ABFM' in paper_code.upper(): paper_code = 'ABFM'
+            elif 'ABM' in paper_code.upper(): paper_code = 'ABM'
+            elif 'BFM' in paper_code.upper(): paper_code = 'BFM'
+            elif 'BRBL' in paper_code.upper(): paper_code = 'BRBL'
+            
+            bites = data.get('bites', [])
+            total_bites = len(bites)
+            free_limit = total_bites // 2
+            
+            ingested_count = 0
+            ingested_bites = []
+
+            for idx, b in enumerate(bites):
+                check = b.get('check_question', {})
+                bite, created = Bite.objects.update_or_create(
+                    bite_id=b['id'],
+                    defaults={
+                        'paper_code': paper_code,
+                        'module': b.get('module') or data.get('module') or 'General',
+                        'chapter': b.get('chapter') or data.get('chapter') or 'General',
+                        'title': b.get('title', ''),
+                        'concept': b.get('concept', ''),
+                        'example': b.get('example', ''),
+                        'formula': b.get('formula', ''),
+                        'question_text': check.get('question', ''),
+                        'question_type': check.get('type', 'mcq'),
+                        'options': check.get('options', []),
+                        'answer': check.get('answer', ''),
+                        'tolerance': check.get('tolerance', 0.0),
+                        'explanation': check.get('explanation', ''),
+                        'difficulty': b.get('difficulty', 'medium'),
+                        'bite_type': 'numerical' if check.get('type') == 'numerical' else 'conceptual',
+                        'estimated_minutes': b.get('estimated_minutes', 5),
+                        'tags': b.get('tags', []),
+                        'is_free': idx < free_limit
+                    }
+                )
+                ingested_bites.append(bite)
+                ingested_count += 1
+
+            # Auto-bundle sync if requested
+            bundle_id = None
+            if request.data.get('auto_bundle') == 'true':
+                candidate = Candidate.objects.filter(user__is_superuser=True).first() or Candidate.objects.first()
+                bundle, _ = MarketplaceBundle.objects.get_or_create(
+                    paper_code=paper_code,
+                    defaults={
+                        'title': f"{paper_code} Comprehensive Roadmap",
+                        'description': f"Full curriculum roadmap for {paper_code} subject.",
+                        'price': 399.0,
+                        'creator': candidate,
+                        'status': 'verified'
+                    }
+                )
+                bundle.bites.set(ingested_bites)
+                bundle_id = bundle.id
+
+            return Response({
+                'count': ingested_count,
+                'paper_code': paper_code,
+                'bundle_id': bundle_id,
+                'status': 'success'
+            })
+
+        except Exception as e:
+            return Response({'error': f'Ingestion failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

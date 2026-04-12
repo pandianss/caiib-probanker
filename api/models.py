@@ -40,6 +40,30 @@ class SRSMetadata(models.Model):
     class Meta:
         unique_together = ('candidate', 'card_id')
 
+class MarketplaceBundle(models.Model):
+    STATUS_CHOICES = [('draft', 'Draft'), ('pending', 'Pending Approval'), ('verified', 'Verified')]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    creator = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='created_bundles')
+    paper_code = models.CharField(max_length=20)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} by {self.creator.user.username}"
+
+class BundleAccess(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name='accessed_bundles')
+    bundle = models.ForeignKey(MarketplaceBundle, on_delete=models.CASCADE)
+    purchased_at = models.DateTimeField(auto_now_add=True)
+    transaction_id = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        unique_together = ('candidate', 'bundle')
+
 class Bite(models.Model):
     DIFFICULTY_CHOICES = [('easy','Easy'), ('medium','Medium'), ('hard','Hard')]
     TYPE_CHOICES = [('conceptual','Conceptual'), ('numerical','Numerical'), ('regulatory','Regulatory')]
@@ -62,6 +86,8 @@ class Bite(models.Model):
     bite_type     = models.CharField(max_length=20, choices=TYPE_CHOICES, default='conceptual')
     estimated_minutes = models.IntegerField(default=5)
     tags          = models.JSONField(default=list)
+    bundle        = models.ForeignKey(MarketplaceBundle, on_delete=models.SET_NULL, null=True, blank=True, related_name='bites')
+    is_free       = models.BooleanField(default=False)
     created_at    = models.DateTimeField(auto_now_add=True)
 
     class Meta:
