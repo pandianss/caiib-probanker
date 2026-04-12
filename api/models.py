@@ -31,7 +31,7 @@ class PaperProgress(models.Model):
 
 class SRSMetadata(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
-    card_id = models.CharField(max_length=100)  # Refers to MognoDB document ID
+    card_id = models.CharField(max_length=100)  # Refers to Bite.bite_id (e.g. 'abm_bite_001')
     interval = models.IntegerField(default=1)  # Days
     ease_factor = models.FloatField(default=2.5)
     next_review = models.DateTimeField()

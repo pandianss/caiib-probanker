@@ -1,0 +1,72 @@
+{
+  "paper_code": "BFM",
+  "module": "Forex & Treasury",
+  "bites": [
+    {
+      "id": "bfm_bite_007",
+      "chapter": "Forex Operations",
+      "title": "Nostro, Vostro, and Loro",
+      "concept": "Nostro: 'Our' account with you (USD in NY). Vostro: 'Your' account with us (INR in Delhi). Loro: 'Their' account (Bank A referring to Bank B's account).",
+      "example": "SBI's account with Chase Manhattan in USD is a Nostro account for SBI.",
+      "difficulty": "easy",
+      "estimated_minutes": 3,
+      "tags": ["Forex", "Foundational"],
+      "check_question": {
+        "type": "mcq",
+        "question": "What is a Vostro account?",
+        "options": ["SBI account with HSBC", "HSBC account with SBI", "Bank of America account with Citi", "Personal savings account"],
+        "answer": "HSBC account with SBI",
+        "explanation": "Vostro means 'Your account with us'."
+      }
+    },
+    {
+      "id": "bfm_bite_008",
+      "chapter": "Forex Rates",
+      "title": "Direct vs Indirect Quote",
+      "concept": "Direct Quote: Fixed foreign currency (1 USD = 83 INR). Indirect Quote: Fixed home currency (100 INR = 1.20 USD).",
+      "example": "Standard quote in India for USD is direct.",
+      "difficulty": "easy",
+      "estimated_minutes": 2,
+      "tags": ["Forex"],
+      "check_question": {
+        "type": "mcq",
+        "question": "If 1 USD = 83.50 INR, it is a:",
+        "options": ["Direct Quote", "Indirect Quote", "Cross Quote", "Piped Quote"],
+        "answer": "Direct Quote",
+        "explanation": "Home currency varies per unit of foreign currency."
+      }
+    },
+    {
+      "id": "bfm_bite_009",
+      "chapter": "Risk Management",
+      "title": "Basel III - Pillar 1",
+      "concept": "Pillar 1 covers Minimum Capital Requirements for Credit, Market, and Operational Risk.",
+      "difficulty": "medium",
+      "estimated_minutes": 5,
+      "tags": ["Risk", "Basel"],
+      "check_question": {
+        "type": "mcq",
+        "question": "Which risk is NOT part of Pillar 1?",
+        "options": ["Credit Risk", "Market Risk", "Operational Risk", "Reputational Risk"],
+        "answer": "Reputational Risk",
+        "explanation": "Reputational risk falls under Pillar 2 (Supervisory Review)."
+      }
+    },
+    {
+      "id": "bfm_bite_010",
+      "chapter": "Treasury",
+      "title": "LIBOR and MIBOR",
+      "concept": "LIBOR was the global benchmark for interbank rates (now shifted to SOFR). MIBOR is the Mumbai Interbank Offered Rate.",
+      "difficulty": "easy",
+      "estimated_minutes": 3,
+      "tags": ["Treasury"],
+      "check_question": {
+        "type": "mcq",
+        "question": "What does MIBOR stand for?",
+        "options": ["Metro Interbank Rate", "Mumbai Interbank Offered Rate", "Monetary Interbank Rate", "Mixed Interest Rate"],
+        "answer": "Mumbai Interbank Offered Rate",
+        "explanation": "It's the benchmark for Indian interbank lending."
+      }
+    }
+  ]
+}

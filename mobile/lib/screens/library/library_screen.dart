@@ -22,7 +22,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   List<String> _getAvailablePapers(BuildContext context) {
     final provider = context.read<ProgressProvider>();
     final elective = provider.candidateData?['selected_elective'] as String? ?? 'RISK';
-    return ['ABM', 'BFM', 'ABFM', 'BRBL', elective];
+    return ['ABM', 'BFM', 'ABFM', 'BRBL', elective].toSet().toList();
   }
 
   @override
@@ -133,15 +133,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         title: Text(bite['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15)),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              Text('${bite['estimated_minutes']} min', style: const TextStyle(color: Color(0xFF8B949E), fontSize: 12)),
-                              const SizedBox(width: 12),
-                              Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFFBBF24), shape: BoxShape.circle)),
-                              const SizedBox(width: 4),
-                              Text(bite['difficulty']?.toString().toUpperCase() ?? 'MEDIUM', style: const TextStyle(color: Color(0xFF8B949E), fontSize: 11, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
+                              Row(
+                                children: [
+                                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFFBBF24), shape: BoxShape.circle)),
+                                  const SizedBox(width: 4),
+                                  Text(bite['difficulty']?.toString().toUpperCase() ?? 'MEDIUM', style: const TextStyle(color: Color(0xFF8B949E), fontSize: 11, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
                         ),
                         trailing: isMastered 
                           ? const Icon(Icons.check_circle, color: Color(0xFF10B981))

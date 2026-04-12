@@ -10,10 +10,14 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import Candidate, PaperProgress, SRSMetadata, Bite, BiteAttempt
+from .models import (
+    Candidate, PaperProgress, SRSMetadata, Bite, BiteAttempt,
+    MarketplaceBundle, BundleAccess
+)
 from .serializers import (
     CandidateSerializer, PaperProgressSerializer, SRSMetadataSerializer, 
-    BiteSerializer, BiteListSerializer, BiteDetailSerializer
+    BiteSerializer, BiteListSerializer, BiteDetailSerializer,
+    MarketplaceBundleSerializer
 )
 # Services are lazy-loaded within getter functions to prevent startup hangs
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -95,10 +99,7 @@ def get_srs_service():
     return get_srs_service._service
 
 # TODO: Integrate these services into the v3 flow when ready
-# Removed from import path to optimize startup speed
-def get_tamkot_service(): return None
-def get_scoring_service(): return None
-def get_content_service(): return None
+# Legacy getters removed to keep codebase clean.
 
 class TodaysBiteView(BaseAuthenticatedView):
     def get(self, request):
@@ -114,14 +115,23 @@ class TodaysBiteView(BaseAuthenticatedView):
             try:
                 bite = Bite.objects.get(bite_id=due.card_id)
                 srs_due_count = SRSMetadata.objects.filter(candidate=candidate, next_review__lte=timezone.now()).count()
-                return Response({'bite': BiteDetailSerializer(bite).data, 'mode': 'review', 'srs_due_count': srs_due_count})
+                return Response({'bite': BiteDetailSerializer(bite, context={'request': request}).data, 'mode': 'review', 'srs_due_count': srs_due_count})
             except Bite.DoesNotExist:
                 pass
         
         # 2. Find next unseen bite from weakest paper
         seen_ids = BiteAttempt.objects.filter(candidate=candidate).values_list('bite__bite_id', flat=True).distinct()
+        
+        ELECTIVE_TO_PAPER_CODE = {
+            'RURAL': 'RURAL',
+            'HRM': 'HRM',
+            'IT_DB': 'IT_DB',
+            'RISK': 'RISK',
+            'CENTRAL': 'CENTRAL',
+        }
+        elective_paper = ELECTIVE_TO_PAPER_CODE.get(candidate.selected_elective, 'ABFM')
         weakest = candidate.progress.order_by('current_score').first()
-        paper_filter = weakest.paper_code if weakest else candidate.selected_elective or 'ABFM'
+        paper_filter = weakest.paper_code if weakest else elective_paper
         
         bite = Bite.objects.exclude(bite_id__in=seen_ids).filter(paper_code=paper_filter).first()
         
@@ -132,7 +142,7 @@ class TodaysBiteView(BaseAuthenticatedView):
         if not bite:
             return Response({'message': 'all_bites_seen', 'total_bites': Bite.objects.count()})
         
-        return Response({'bite': BiteDetailSerializer(bite).data, 'mode': 'new'})
+        return Response({'bite': BiteDetailSerializer(bite, context={'request': request}).data, 'mode': 'new'})
 
 class SubmitBiteView(BaseAuthenticatedView):
     def post(self, request):
@@ -148,8 +158,15 @@ class SubmitBiteView(BaseAuthenticatedView):
         
         # Grade answer
         is_correct = False
+        
+        def clean_answer(s):
+            import re
+            # Only remove trailing footnote-style markers like [1], [23]
+            # preserving internal spaces and word characters
+            return re.sub(r'\s*\[\d+\]\.?$', '', s.strip()).lower()
+
         if bite.question_type == 'mcq':
-            is_correct = user_answer.lower() == bite.answer.lower()
+            is_correct = clean_answer(user_answer) == clean_answer(bite.answer)
         elif bite.question_type == 'numerical':
             try:
                 is_correct = abs(float(user_answer) - float(bite.answer)) <= bite.tolerance
@@ -230,6 +247,11 @@ class ProfileUpdateView(BaseAuthenticatedView):
         
         mobile = request.data.get('mobile_number', '').strip()
         if mobile:
+            if Candidate.objects.filter(mobile_number=mobile).exclude(pk=candidate.pk).exists():
+                return Response(
+                    {"error": "This mobile number is already registered to another account."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             candidate.mobile_number = mobile
             candidate.save()
             
@@ -315,7 +337,7 @@ class DueBitesView(BaseAuthenticatedView):
         for meta in due_metadata[:20]:  # Cap at 20 per session for mobile performance
             try:
                 bite = Bite.objects.get(bite_id=meta.card_id)
-                due_bites.append(BiteDetailSerializer(bite).data)
+                due_bites.append(BiteDetailSerializer(bite, context={'request': request}).data)
             except Bite.DoesNotExist:
                 pass
         
@@ -336,15 +358,6 @@ class BiteHistoryView(BaseAuthenticatedView):
             'attempted_at': a.attempted_at,
         } for a in attempts])
 
-from .models import (
-    Candidate, PaperProgress, SRSMetadata, Bite, BiteAttempt,
-    MarketplaceBundle, BundleAccess
-)
-from .serializers import (
-    CandidateSerializer, PaperProgressSerializer, SRSMetadataSerializer, 
-    BiteSerializer, BiteListSerializer, BiteDetailSerializer,
-    MarketplaceBundleSerializer
-)
 
 class MarketplaceListView(BaseAuthenticatedView):
     """List all bundles that have been verified by admin."""
@@ -410,6 +423,10 @@ class PingView(APIView):
         return Response({"status": "pong"})
 
 
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
+
+@method_decorator(staff_member_required, name='dispatch')
 class IngestPortalView(TemplateView):
     template_name = 'api/ingest_portal.html'
 
@@ -428,7 +445,10 @@ class IngestUploadAPIView(APIView):
             return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            data = json.load(file_obj)
+            import io
+            # Parse JSON with explicit UTF-8 encoding to support high-fidelity symbols (Σ, X̄, etc)
+            content_str = file_obj.read().decode('utf-8')
+            data = json.loads(content_str)
             paper_code = request.data.get('paper_code')
             if paper_code == 'AUTO' or not paper_code:
                 paper_code = data.get('paper_code', 'UNKNOWN')
@@ -460,7 +480,7 @@ class IngestUploadAPIView(APIView):
                         'formula': b.get('formula', ''),
                         'question_text': check.get('question', ''),
                         'question_type': check.get('type', 'mcq'),
-                        'options': check.get('options', []),
+                        'options': check.get('options') or ([check.get('answer'), "None of the above"] if check.get('type') != 'numerical' else []),
                         'answer': check.get('answer', ''),
                         'tolerance': check.get('tolerance', 0.0),
                         'explanation': check.get('explanation', ''),

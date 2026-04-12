@@ -69,13 +69,6 @@ class TodaysBiteCard extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                Icon(Icons.timer_outlined, size: 14, color: accentColor),
-                const SizedBox(width: 4),
-                Text(
-                  '${bite['estimated_minutes'] ?? 5} min',
-                  style: TextStyle(fontSize: 13, color: accentColor),
-                ),
-                const SizedBox(width: 16),
                 _DifficultyDot(difficulty: bite['difficulty'] ?? 'medium'),
               ],
             ),

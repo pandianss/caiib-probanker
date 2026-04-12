@@ -1,12 +1,23 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
+  static String get _defaultUrl {
+    if (kIsWeb) return 'http://localhost:8000/api';
+    try {
+      if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
+    } catch (_) {}
+    return 'http://localhost:8000/api';
+  }
+
   final String _baseUrl = const String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000/api', // Android Emulator default
-  );
+    defaultValue: '', 
+  ).isEmpty ? _defaultUrl : const String.fromEnvironment('API_BASE_URL');
+
   final _storage = const FlutterSecureStorage();
 
   Future<String?> getToken() async => await _storage.read(key: 'jwt');
@@ -232,6 +243,9 @@ class ApiService {
       return null;
     }
   }
+
+  /// Public wrapper around _getValidToken() for use during app startup.
+  Future<String?> getValidTokenForStartup() async => await _getValidToken();
 
   Future<void> clearSession() async {
     await _storage.delete(key: 'jwt');

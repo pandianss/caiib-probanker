@@ -1,0 +1,92 @@
+{
+  "paper_code": "ABM",
+  "module": "Statistics & Numericals",
+  "bites": [
+    {
+      "id": "abm_bite_006",
+      "chapter": "Correlation Analysis",
+      "title": "Karl Pearson's Coefficient (r)",
+      "concept": "Karl Pearson's Coefficient (r) measures linear correlation. -1 = perfect negative, +1 = perfect positive, 0 = no correlation.",
+      "example": "If r = 0.85 between credit scores and repayment, it's a strong positive relationship.",
+      "formula": "r = Σ(X-X̄)(Y-Ȳ) / √[Σ(X-X̄)² × Σ(Y-Ȳ)²]",
+      "difficulty": "medium",
+      "estimated_minutes": 5,
+      "tags": ["Statistics", "numerical"],
+      "check_question": {
+        "type": "mcq",
+        "question": "If r = -0.9, what does it indicate?",
+        "options": ["Strong positive", "Weak negative", "Strong negative", "No correlation"],
+        "answer": "Strong negative",
+        "explanation": "r near -1 indicates strong inverse relationship."
+      }
+    },
+    {
+      "id": "abm_bite_007",
+      "chapter": "Sampling Methods",
+      "title": "Stratified Random Sampling",
+      "concept": "Stratified sampling involves dividing a population into subgroups (strata) and taking a random sample from each.",
+      "example": "Dividing bank customers into Small, Medium, Large based on balance before surveying.",
+      "difficulty": "easy",
+      "estimated_minutes": 3,
+      "tags": ["Research", "Statistics"],
+      "check_question": {
+        "type": "mcq",
+        "question": "Which sampling method ensures representation of specific subgroups?",
+        "options": ["Simple Random", "Cluster", "Stratified", "Systematic"],
+        "answer": "Stratified",
+        "explanation": "Strata ensure subgroups are not missed."
+      }
+    },
+    {
+      "id": "abm_bite_008",
+      "chapter": "Economic Concepts",
+      "title": "GDP Deflator",
+      "concept": "The GDP deflator measures the level of prices of all new, domestically produced, final goods and services in an economy.",
+      "formula": "GDP Deflator = (Nominal GDP / Real GDP) * 100",
+      "difficulty": "medium",
+      "estimated_minutes": 4,
+      "tags": ["Economics", "numerical"],
+      "check_question": {
+        "type": "mcq",
+        "question": "If Nominal GDP is 500 and Real GDP is 400, what is the GDP Deflator?",
+        "options": ["125", "80", "120", "110"],
+        "answer": "125",
+        "explanation": "(500/400)*100 = 125."
+      }
+    },
+    {
+      "id": "abm_bite_009",
+      "chapter": "HR Management",
+      "title": "Maslow's Hierarchy",
+      "concept": "Maslow's theory suggests 5 levels of needs: Physiological, Safety, Social, Esteem, and Self-Actualization.",
+      "example": "A competitive salary satisfies physiological needs; a job title satisfies esteem.",
+      "difficulty": "easy",
+      "estimated_minutes": 4,
+      "tags": ["HRM", "Theory"],
+      "check_question": {
+        "type": "mcq",
+        "question": "What is the highest level in Maslow's hierarchy?",
+        "options": ["Esteem", "Safety", "Self-Actualization", "Social"],
+        "answer": "Self-Actualization",
+        "explanation": "The pinnacle where one realizes full potential."
+      }
+    },
+    {
+      "id": "abm_bite_010",
+      "chapter": "Credit Management",
+      "title": "NPA Classification (Substandard)",
+      "concept": "An asset is classified as Substandard if it has remained NPA for a period less than or equal to 12 months.",
+      "example": "A loan overdue for 4 months (already NPA for 1 month) is substandard.",
+      "difficulty": "medium",
+      "estimated_minutes": 5,
+      "tags": ["Credit", "NPA"],
+      "check_question": {
+        "type": "mcq",
+        "question": "A loan NPA for 10 months is classified as:",
+        "options": ["Standard", "Substandard", "Doubtful", "Loss"],
+        "answer": "Substandard",
+        "explanation": "Max 12 months in Substandard category."
+      }
+    }
+  ]
+}

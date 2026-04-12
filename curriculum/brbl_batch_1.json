@@ -1,0 +1,54 @@
+{
+  "paper_code": "BRBL",
+  "module": "Banking Laws & Regulations",
+  "bites": [
+    {
+      "id": "brbl_bite_001",
+      "chapter": "Legal Framework",
+      "title": "The Banking Regulation Act, 1949",
+      "concept": "The BR Act, 1949, was enacted to consolidate and amend the law relating to banking in India. It empowers RBI to license banks and regulate their management.",
+      "difficulty": "easy",
+      "estimated_minutes": 4,
+      "tags": ["Law", "Foundational"],
+      "check_question": {
+        "type": "mcq",
+        "question": "Which of these is the primary act regulating commercial banking operations in India?",
+        "options": ["RBI Act 1934", "Companies Act 2013", "Banking Regulation Act 1949", "Negotiable Instruments Act"],
+        "answer": "Banking Regulation Act 1949",
+        "explanation": "The BR Act is the core operational law for banks."
+      }
+    },
+    {
+      "id": "brbl_bite_002",
+      "chapter": "Negotiable Instruments",
+      "title": "Types of Crossings",
+      "concept": "General crossing (parallel lines) ensures payment only through a bank. Special crossing (bank name included) ensures payment only through THAT bank.",
+      "difficulty": "medium",
+      "estimated_minutes": 5,
+      "tags": ["Law", "Cheques"],
+      "check_question": {
+        "type": "mcq",
+        "question": "A cheque with two parallel lines and 'ICICI Bank' written between them is a:",
+        "options": ["General Crossing", "Special Crossing", "Account Payee Crossing", "Restrictive Crossing"],
+        "answer": "Special Crossing",
+        "explanation": "Including a bank name makes it a Special Crossing."
+      }
+    },
+    {
+      "id": "brbl_bite_003",
+      "chapter": "Recovery Acts",
+      "title": "SARFAESI Act - Basics",
+      "concept": "Securitisation and Reconstruction of Financial Assets and Enforcement of Security Interest Act allows banks to recover NPAs without court intervention.",
+      "difficulty": "medium",
+      "estimated_minutes": 6,
+      "tags": ["Recovery", "Law"],
+      "check_question": {
+        "type": "mcq",
+        "question": "SARFAESI enables recovery through:",
+        "options": ["Civil Court Suit", "Arbitration", "Enforcement of Security Interest", "Consumer Forum"],
+        "answer": "Enforcement of Security Interest",
+        "explanation": "It bypasses courts for secured assets."
+      }
+    }
+  ]
+}

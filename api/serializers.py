@@ -39,29 +39,13 @@ class BiteSerializer(serializers.ModelSerializer):
         model = Bite
         fields = '__all__'
 
-class BiteListSerializer(serializers.ModelSerializer):
-    """Safe for Library listing — no answer fields."""
-    class Meta:
-        model = Bite
-        fields = [
-            'id', 'bite_id', 'paper_code', 'module', 'chapter',
-            'title', 'difficulty', 'bite_type', 'estimated_minutes', 'tags', 'is_free'
-        ]
-
-class BiteDetailSerializer(serializers.ModelSerializer):
-    """Full detail — used only when user starts a bite session."""
-    class Meta:
-        model = Bite
-        fields = [
-            'id', 'bite_id', 'paper_code', 'module', 'chapter',
-            'title', 'concept', 'example', 'formula',
-            'question_text', 'question_type', 'options',
-            'difficulty', 'bite_type', 'estimated_minutes', 'is_free', 'bundle'
-        ]
-
+class BiteBaseSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         request = self.context.get('request')
+        
+        # Default access and locking status
+        ret['is_locked'] = False
         
         # If bite is not free, check for bundle access
         if not instance.is_free:
@@ -79,15 +63,35 @@ class BiteDetailSerializer(serializers.ModelSerializer):
             if not has_access:
                 # Redact high-fidelity study content
                 ret['concept'] = "🔒 Premium Content: Purchase the bundle to unlock full curriculum bites."
-                ret['example'] = "Locked"
-                ret['formula'] = "Locked"
+                if 'example' in ret: ret['example'] = "Locked"
+                if 'formula' in ret: ret['formula'] = "Locked"
+                if 'explanation' in ret: ret['explanation'] = "Locked"
+                if 'question_text' in ret: ret['question_text'] = "🔒 This question is locked."
+                if 'options' in ret: ret['options'] = []
                 ret['is_locked'] = True
-            else:
-                ret['is_locked'] = False
-        else:
-            ret['is_locked'] = False
-            
+        
         return ret
+
+class BiteListSerializer(BiteBaseSerializer):
+    """Used for Library listing — lightweight but includes gated concept & question."""
+    class Meta:
+        model = Bite
+        fields = [
+            'id', 'bite_id', 'paper_code', 'module', 'chapter',
+            'title', 'concept', 'question_text', 'question_type', 'options',
+            'difficulty', 'bite_type', 'estimated_minutes', 'tags', 'is_free', 'bundle'
+        ]
+
+class BiteDetailSerializer(BiteBaseSerializer):
+    """Full detail — used only when user starts a bite session."""
+    class Meta:
+        model = Bite
+        fields = [
+            'id', 'bite_id', 'paper_code', 'module', 'chapter',
+            'title', 'concept', 'example', 'formula',
+            'question_text', 'question_type', 'options',
+            'difficulty', 'bite_type', 'estimated_minutes', 'is_free', 'bundle'
+        ]
 
 class CandidateSerializer(serializers.ModelSerializer):
     progress = PaperProgressSerializer(many=True, read_only=True)

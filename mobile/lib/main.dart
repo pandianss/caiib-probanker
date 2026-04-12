@@ -40,11 +40,15 @@ class AuthProvider extends ChangeNotifier {
   String errorMessage = '';
 
   Future<void> checkToken() async {
-    final token = await _apiService.getToken();
+    // Validate and, if needed, refresh the token on startup
+    final token = await _apiService.getValidTokenForStartup();
     if (token != null) {
       isAuthenticated = true;
-      notifyListeners();
+    } else {
+      isAuthenticated = false;
+      await _apiService.clearSession(); // Ensure stale tokens are purged
     }
+    notifyListeners();
   }
 
   Future<bool> login(String username, String password) async {
