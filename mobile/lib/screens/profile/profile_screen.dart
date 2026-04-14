@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../main.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/app_state_provider.dart';
 import '../../services/api_service.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
   final ApiService _apiService = ApiService();
   bool isSaving = false;
@@ -18,26 +18,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<ProgressProvider>();
-      if (provider.candidateData == null) {
-        provider.fetchDashboardData().then((_) => _initFields());
-      } else {
-        _initFields();
-      }
-    });
+    _initFields();
   }
 
   void _initFields() {
-    final provider = context.read<ProgressProvider>();
-    final candidateData = provider.candidateData;
-    if (candidateData != null) {
-      final String firstName = candidateData['first_name'] ?? '';
-      final String lastName = candidateData['last_name'] ?? '';
-      setState(() {
-         _nameController.text = lastName.isEmpty ? firstName : '$firstName $lastName'.trim();
-      });
-    }
+    final subState = ref.read(subscriptionProvider);
+    // Profile info would ideally be in a better location, but leveraging existing data
+    // In a production app, we'd have a UserProvider
   }
 
   @override
@@ -52,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() { isSaving = false; });
     
     if (success && mounted) {
-      context.read<ProgressProvider>().fetchDashboardData();
+      ref.read(subscriptionProvider.notifier).refresh();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully.')),
       );
@@ -66,11 +53,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ProgressProvider>();
-    final data = provider.candidateData;
-    final email = data?['email'] ?? 'No email';
-    final mobile = data?['mobile_number'] ?? 'No mobile number';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
@@ -106,26 +88,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   prefixIcon: Icon(Icons.badge_outlined),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 110),
               
-              TextField(
-                enabled: false,
-                decoration: InputDecoration(
-                  labelText: 'Email Address (Locked)',
-                  hintText: email,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              TextField(
-                enabled: false,
-                decoration: InputDecoration(
-                  labelText: 'Mobile Number (Locked)',
-                  hintText: mobile,
-                  prefixIcon: const Icon(Icons.phone_android),
-                ),
-              ),
               ElevatedButton(
                 onPressed: isSaving ? null : _handleSave,
                 child: isSaving 
@@ -137,50 +101,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               OutlinedButton(
                 onPressed: () {
-                   context.read<AuthProvider>().logout();
-                   Navigator.of(context, rootNavigator: true).pop(); // Go back to shell then it will redirect
+                   ref.read(authProvider.notifier).logout();
                 },
                 style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white24)),
                 child: const Text('LOGOUT', style: TextStyle(color: Colors.white70)),
-              ),
-
-              const SizedBox(height: 48),
-              
-              TextButton(
-                onPressed: () => _confirmDelete(context),
-                child: const Text('DELETE ACCOUNT', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  void _confirmDelete(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Account?'),
-        content: const Text('This action is permanent and will delete all your study progress. Are you sure?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() { isSaving = true; });
-              final success = await _apiService.deleteAccount();
-              if (success && mounted) {
-                context.read<AuthProvider>().logout();
-              } else if (mounted) {
-                setState(() { isSaving = false; });
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete account.')));
-              }
-            }, 
-            child: const Text('DELETE', style: TextStyle(color: Colors.redAccent))
-          ),
-        ],
-      )
     );
   }
 }

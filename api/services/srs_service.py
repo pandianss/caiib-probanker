@@ -6,15 +6,10 @@ class SRSService:
     @staticmethod
     def update_card(metadata, quality):
         """
-        Implementation of SuperMemo-2 algorithm.
+        Implementation of SuperMemo-2 algorithm with pedagogical tagging.
         quality: score from 0 to 5.
-        0: Complete blackout.
-        1: Incorrect response; the correct one remembered.
-        2: Incorrect response; where the correct one seemed easy to recall.
-        3: Correct response; recalled with serious difficulty.
-        4: Correct response; after a hesitation.
-        5: Perfect response.
         """
+        # 1. Update Interval and Ease Factor (SM-2 Logic)
         if quality >= 3:
             if metadata.repetition_count == 0:
                 metadata.interval = 1
@@ -32,6 +27,17 @@ class SRSService:
         if metadata.ease_factor < 1.3:
             metadata.ease_factor = 1.3
             
+        # 2. Update Pedagogical Status Tagging
+        if quality < 3:
+            metadata.status = 'WEAK'
+        elif metadata.repetition_count == 0:
+            metadata.status = 'NEW'
+        elif metadata.repetition_count > 5 and metadata.ease_factor > 2.5:
+            metadata.status = 'MASTERED'
+        else:
+            metadata.status = 'LEARNING'
+
+        # 3. Save Next Review date
         metadata.next_review = timezone.now() + timedelta(days=metadata.interval)
         metadata.save()
         return metadata

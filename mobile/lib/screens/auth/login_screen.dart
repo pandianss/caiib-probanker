@@ -1,124 +1,113 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../main.dart';
-import 'register_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../providers/app_state_provider.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _usernameController = TextEditingController();
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _mobileController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  void _handleLogin() {
+    final mobile = _mobileController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    if (mobile.isNotEmpty && password.isNotEmpty) {
+      ref.read(authProvider.notifier).login(mobile, password);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter credentials')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
+      backgroundColor: const Color(0xFF0D1117),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 60.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Icon(Icons.account_balance_rounded, size: 80, color: Color(0xFF6366F1)),
+              const SizedBox(height: 32),
+              Text(
+                "Welcome to ProBanker",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Accelerate your banking career with micro-learning.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF8B949E), fontSize: 16),
+              ),
               const SizedBox(height: 60),
-              Center(
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.auto_stories_outlined, size: 50, color: Theme.of(context).primaryColor),
-                ),
-              ),
-              const SizedBox(height: 48),
-              Text(
-                'CAIIB BITSIZE',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 32, letterSpacing: 2.0),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'One bite at a time.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-              Text(
-                'Sign in to sync your progress',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 48),
-              
               TextField(
-                controller: _usernameController,
+                controller: _mobileController,
+                keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: 'Email Address',
-                  prefixIcon: Icon(Icons.person_outline),
+                  labelText: "Email Address",
+                  prefixIcon: Icon(Icons.email_outlined),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                onSubmitted: (_) => context.read<AuthProvider>().login(
-                  _usernameController.text, 
-                  _passwordController.text
-                ),
+                style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: 'Password',
+                  labelText: "Password",
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
+                onSubmitted: (_) => _handleLogin(),
               ),
-              const SizedBox(height: 32),
-              
-              if (auth.errorMessage.isNotEmpty)
+              const SizedBox(height: 48),
+              if (authState.errorMessage != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(auth.errorMessage, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  padding: const EdgeInsets.only(bottom: 24.0),
+                  child: Text(
+                    authState.errorMessage!,
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              
-              ElevatedButton(
-                onPressed: auth.isAttemptingLogin ? null : () {
-                   context.read<AuthProvider>().login(
-                     _usernameController.text, 
-                     _passwordController.text
-                   );
-                },
-                child: auth.isAttemptingLogin 
-                   ? const CircularProgressIndicator(color: Colors.white)
-                   : const Text('SIGN IN'),
+              SizedBox(
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: authState.isLoading ? null : _handleLogin,
+                  child: authState.isLoading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("SIGN IN"),
+                ),
               ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Don't have an account?", style: Theme.of(context).textTheme.bodyMedium),
-                  TextButton(
-                    onPressed: () {
-                       Navigator.push(
-                         context,
-                         MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                       );
-                    },
-                    child: Text('Register', style: TextStyle(color: Theme.of(context).primaryColor)),
-                  ),
-                ],
-              )
+              TextButton(
+                onPressed: () {},
+                child: const Text("First time? Create account", style: TextStyle(color: Color(0xFF8B949E))),
+              ),
             ],
           ),
         ),

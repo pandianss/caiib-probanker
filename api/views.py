@@ -71,8 +71,11 @@ class RegisterView(APIView):
             
         return Response({"status": "user created successfully"}, status=status.HTTP_201_CREATED)
 
+from rest_framework.throttling import UserRateThrottle
+
 class BaseAuthenticatedView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
 
     def get_candidate(self, request):
         candidate, _ = Candidate.objects.get_or_create(user=request.user)
@@ -105,7 +108,23 @@ class TodaysBiteView(BaseAuthenticatedView):
     def get(self, request):
         candidate = self.get_candidate(request)
         
-        # 1. Check SRS due
+        # 1. Monetization: Check daily limit for FREE tier
+        subscription = getattr(candidate, 'subscription', None)
+        if not subscription or subscription.plan_type == 'FREE':
+            limit = subscription.daily_bites_limit if subscription else 20
+            today_count = BiteAttempt.objects.filter(
+                candidate=candidate, 
+                attempted_at__date=timezone.now().date()
+            ).count()
+            
+            if today_count >= limit:
+                return Response({
+                    'status': 'LIMIT_EXCEEDED',
+                    'message': f'You have reached your daily limit of {limit} bites. Upgrade to PRO for unlimited access!',
+                    'limit': limit
+                }, status=status.HTTP_403_FORBIDDEN)
+
+        # 2. Check SRS due
         due = SRSMetadata.objects.filter(
             candidate=candidate, 
             next_review__lte=timezone.now()

@@ -15,6 +15,8 @@ class Candidate(models.Model):
     study_streak = models.IntegerField(default=0)
     last_study_date = models.DateField(null=True, blank=True)
     mobile_number = models.CharField(max_length=15, null=True, blank=True)
+    xp_points = models.PositiveIntegerField(default=0)
+    total_time_spent_seconds = models.PositiveBigIntegerField(default=0)
 
     def __str__(self):
         return self.user.username
@@ -30,12 +32,19 @@ class PaperProgress(models.Model):
         unique_together = ('candidate', 'paper_code')
 
 class SRSMetadata(models.Model):
+    STATUS_CHOICES = [
+        ('NEW', 'New'),
+        ('LEARNING', 'Learning'),
+        ('WEAK', 'Weak'),
+        ('MASTERED', 'Mastered')
+    ]
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
     card_id = models.CharField(max_length=100)  # Refers to Bite.bite_id (e.g. 'abm_bite_001')
     interval = models.IntegerField(default=1)  # Days
     ease_factor = models.FloatField(default=2.5)
     next_review = models.DateTimeField()
     repetition_count = models.IntegerField(default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
 
     class Meta:
         unique_together = ('candidate', 'card_id')
@@ -77,7 +86,13 @@ class Bite(models.Model):
     example       = models.TextField(blank=True)
     formula       = models.CharField(max_length=300, blank=True)
     question_text = models.TextField()
-    question_type = models.CharField(max_length=20, choices=[('mcq','MCQ'),('numerical','Numerical')])
+    question_type = models.CharField(max_length=20, choices=[
+        ('mcq','MCQ'),
+        ('numerical','Numerical'),
+        ('match','Match the Following'),
+        ('assertion_reason','Assertion-Reason'),
+        ('fitb', 'Fill in the Blanks')
+    ])
     options       = models.JSONField(null=True, blank=True)
     answer        = models.CharField(max_length=200)
     tolerance     = models.FloatField(default=0.0)
@@ -119,8 +134,22 @@ class ConsentLog(models.Model):
     ip_address = models.GenericIPAddressField(null=True)
 
 class SubscriptionPlan(models.Model):
-    candidate = models.OneToOneField(Candidate, on_delete=models.CASCADE)
+    TIER_CHOICES = [
+        ('FREE', 'Free Tier'),
+        ('PRO', 'Professional'),
+        ('ELITE', 'Elite Performance')
+    ]
+    candidate = models.OneToOneField(Candidate, on_delete=models.CASCADE, related_name='subscription')
     is_active = models.BooleanField(default=False)
-    plan_type = models.CharField(max_length=50, default='FREE')
+    plan_type = models.CharField(max_length=50, choices=TIER_CHOICES, default='FREE')
     expiry_date = models.DateField(null=True, blank=True)
+    daily_bites_limit = models.PositiveIntegerField(default=20)
     razorpay_order_id = models.CharField(max_length=100, blank=True)
+    features_json = models.JSONField(default=dict, help_text="JSON list of enabled feature flags")
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Candidate)
+def create_candidate_subscription(sender, instance, created, **kwargs):
+    if created:
+        SubscriptionPlan.objects.get_or_create(candidate=instance)

@@ -1,43 +1,73 @@
 import os
+import hmac
+import hashlib
+import json
+from django.utils import timezone
+from ..models import SubscriptionPlan
 
 class PaymentService:
     def __init__(self):
         self.key_id = os.getenv('RAZORPAY_KEY_ID', 'test_key_id')
         self.key_secret = os.getenv('RAZORPAY_KEY_SECRET', 'test_key_secret')
-        # In a real app, we'd use 'import razorpay'
 
-    def create_order(self, amount, currency='INR', receipt='order_rcptid_11'):
+    def create_order(self, amount, currency='INR', receipt='ord_rcpt_001'):
         """
-        Creates a Razorpay order.
-        Amount should be in paise (e.g., 50000 for 500.00 INR)
+        In production, this would call the Razorpay API.
         """
-        # Mocking razorpay order creation
+        # Mocking for local dev with production-like structure
+        order_id = f"order_{os.urandom(8).hex()}"
         return {
-            "id": "order_EKZ9V6S6tO4s32",
+            "id": order_id,
             "amount": amount,
             "currency": currency,
             "receipt": receipt,
             "status": "created"
         }
 
+    def verify_signature(self, razorpay_order_id, razorpay_payment_id, razorpay_signature):
+        """
+        Verifies the Razorpay payment signature to prevent payment spoofing.
+        """
+        if self.key_secret == 'test_key_secret':
+            return True # Allow testing without real keys
+            
+        payload = f"{razorpay_order_id}|{razorpay_payment_id}"
+        generated_signature = hmac.new(
+            self.key_secret.encode(),
+            payload.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(generated_signature, razorpay_signature)
+
+    def activate_subscription(self, candidate, plan_type, duration_days=180):
+        """
+        Activates or upgrades a user's subscription.
+        """
+        plan, created = SubscriptionPlan.objects.get_or_create(candidate=candidate)
+        
+        # Define limits per tier
+        TIER_LIMITS = {
+            'FREE': 20,
+            'PRO': 1000,
+            'ELITE': 5000
+        }
+        
+        plan.plan_type = plan_type
+        plan.is_active = True
+        plan.daily_bites_limit = TIER_LIMITS.get(plan_type, 20)
+        plan.expiry_date = timezone.now().date() + timezone.timedelta(days=duration_days)
+        plan.save()
+        
+        return plan
+
 class ComplianceService:
     @staticmethod
     def log_consent(candidate, consent_type, version='1.0'):
-        """
-        Logs user consent per DPDP Act 2023 requirements.
-        """
-        # This would save to a ConsentLog model
-        print(f"Consent logged for {candidate.user.username}: {consent_type} v{version}")
-        return True
-
-    @staticmethod
-    def get_data_summary(candidate):
-        """
-        Provides data minimization and transparency summary.
-        """
-        return {
-            "pnp_collected": ["Personal Name", "Mobile Number", "Banking Professional Status"],
-            "purpose": "Personalized CAIIB e-learning and SRS progression",
-            "retention_period": "3 years (per CAIIB attempt cycle)",
-            "rights": ["Access", "Correction", "Erasure", "Withdrawal of Consent"]
-        }
+        from ..models import ConsentLog
+        # This would be called from a view
+        return ConsentLog.objects.create(
+            candidate=candidate,
+            consent_type=consent_type,
+            version=version
+        )

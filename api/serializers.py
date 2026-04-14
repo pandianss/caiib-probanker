@@ -53,16 +53,20 @@ class BiteBaseSerializer(serializers.ModelSerializer):
             if request and request.user.is_authenticated:
                 candidate = getattr(request.user, 'candidate', None)
                 if candidate:
-                    # Check if user owns the bundle this bite belongs to
+                    # 1. Check if user owns the bundle this bite belongs to
                     if instance.bundle and BundleAccess.objects.filter(candidate=candidate, bundle=instance.bundle).exists():
                         has_access = True
-                    # Check if user is the creator
+                    # 2. Check for Tier based access (PRO or ELITE)
+                    subscription = getattr(candidate, 'subscription', None)
+                    if subscription and subscription.plan_type in ['PRO', 'ELITE'] and subscription.is_active:
+                        has_access = True
+                    # 3. Check if user is the creator
                     if instance.bundle and instance.bundle.creator == candidate:
                         has_access = True
             
             if not has_access:
                 # Redact high-fidelity study content
-                ret['concept'] = "🔒 Premium Content: Purchase the bundle to unlock full curriculum bites."
+                ret['concept'] = "🔒 Premium Content: Upgrade to PRO or purchase the bundle to unlock."
                 if 'example' in ret: ret['example'] = "Locked"
                 if 'formula' in ret: ret['formula'] = "Locked"
                 if 'explanation' in ret: ret['explanation'] = "Locked"

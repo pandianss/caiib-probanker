@@ -1,131 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/shell/main_shell.dart';
-import 'services/api_service.dart';
-
+import 'app_router.dart';
 import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Notifications
+  // Initialize Notifications (Non-blocking)
   final notificationService = NotificationService();
-  try {
-    await notificationService.init();
-    await notificationService.requestPermissions();
-    await notificationService.scheduleDailyReminder(hour: 21, minute: 0);
-  } catch (e) {
-    debugPrint("Notifications not supported on this platform: $e");
-  }
+  notificationService.init().then((_) {
+    notificationService.requestPermissions();
+    notificationService.scheduleDailyReminder(hour: 21, minute: 0);
+  }).catchError((e) => debugPrint("Notifications error: $e"));
 
-  final authProvider = AuthProvider();
-  await authProvider.checkToken();
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: authProvider),
-        ChangeNotifierProvider(create: (_) => ProgressProvider()),
-      ],
-      child: const MyApp(),
+    const ProviderScope(
+      child: MyApp(),
     ),
   );
 }
 
-class AuthProvider extends ChangeNotifier {
-  final ApiService _apiService = ApiService();
-  bool isAuthenticated = false;
-  bool isAttemptingLogin = false;
-  String errorMessage = '';
-
-  Future<void> checkToken() async {
-    // Validate and, if needed, refresh the token on startup
-    final token = await _apiService.getValidTokenForStartup();
-    if (token != null) {
-      isAuthenticated = true;
-    } else {
-      isAuthenticated = false;
-      await _apiService.clearSession(); // Ensure stale tokens are purged
-    }
-    notifyListeners();
-  }
-
-  Future<bool> login(String username, String password) async {
-    isAttemptingLogin = true;
-    errorMessage = '';
-    notifyListeners();
-
-    final success = await _apiService.login(username, password);
-    if (success) {
-      isAuthenticated = true;
-    } else {
-      errorMessage = 'Invalid credentials or network error';
-    }
-    isAttemptingLogin = false;
-    notifyListeners();
-    return success;
-  }
-
-  Future<void> logout() async {
-    await _apiService.clearSession();
-    isAuthenticated = false;
-    notifyListeners();
-  }
-}
-
-class ProgressProvider extends ChangeNotifier {
-  final ApiService _apiService = ApiService();
-  Map<String, dynamic>? candidateData;
-  Map<String, dynamic>? statsData;
-  bool isLoading = true;
-  int dueCount = 0;
-
-  Future<void> fetchDashboardData() async {
-    isLoading = true;
-    notifyListeners();
-    
-    final results = await Future.wait([
-      _apiService.getProgress(),
-      _apiService.getStats(),
-      _apiService.getDueBites(),
-    ]);
-
-    candidateData = results[0] as Map<String, dynamic>?;
-    statsData = results[1] as Map<String, dynamic>?;
-    final dueData = results[2] as Map<String, dynamic>?;
-    dueCount = dueData?['due_count'] ?? 0;
-
-    isLoading = false;
-    notifyListeners();
-  }
-
-  Future<bool> updateElective(String elective) async {
-    final success = await _apiService.updateElective(elective);
-    if (success) {
-      await fetchDashboardData(); // Refresh all state
-    }
-    return success;
-  }
-}
-
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CAIIB Bitsize',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
+    return MaterialApp.router(
+      title: 'ProBanker',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          if (auth.isAuthenticated) {
-            return const MainShell();
-          }
-          return const LoginScreen();
-        },
-      ),
+      routerConfig: router,
     );
   }
 }
