@@ -327,6 +327,58 @@ class ApiService {
     }
   }
 
+  /// Initiates a subscription purchase via the backend (Razorpay order creation).
+  /// Returns the order/session map on success, or null on failure.
+  Future<Map<String, dynamic>?> initiateSubscription({
+    required String planKey,
+    required bool annual,
+  }) async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/subscription/initiate/'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'plan': planKey, 'annual': annual}),
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Submits the full onboarding selection (certification, elective, daily goal,
+  /// and attempt number) and seeds the user's initial paper progress records.
+  Future<bool> updateOnboarding({
+    required String certification,
+    String? elective,
+    required String dailyGoal,
+    required int attemptNumber,
+  }) async {
+    final token = await _getValidToken();
+    if (token == null) return false;
+    try {
+      final body = <String, dynamic>{
+        'certification': certification,
+        'daily_goal': dailyGoal,
+        'attempt_number': attemptNumber,
+      };
+      if (elective != null) body['elective'] = elective;
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/onboarding/'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 15));
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> deleteAccount() async {
     final token = await _getValidToken();
     if (token == null) return false;
