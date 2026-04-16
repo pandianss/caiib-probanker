@@ -9,10 +9,18 @@ import '../../services/api_service.dart';
 
 class BiteScreen extends ConsumerWidget {
   final Map<String, dynamic> bite;
-  const BiteScreen({super.key, required this.bite});
+  final bool isReviewMode;
+  const BiteScreen({super.key, required this.bite, this.isReviewMode = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // On first build, inform provider of mode
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (isReviewMode) {
+        ref.read(biteSessionProvider.notifier).setReviewMode(true);
+      }
+    });
+
     final session = ref.watch(biteSessionProvider);
     final isLocked = bite['is_locked'] == true;
 
@@ -70,21 +78,46 @@ class BiteScreen extends ConsumerWidget {
           content: bite['concept'] ?? '',
           formula: bite['formula'],
           example: bite['example'],
+          isReviewMode: session.isReviewMode,
+          previouslyWeak: bite['srs_status'] == 'WEAK',
         );
+
+      case BitePhase.revisit:
+        return BiteCard(
+          title: bite['title'] ?? '',
+          content: bite['concept'] ?? '',
+          formula: bite['formula'],
+          example: bite['example'],
+          isReviewMode: session.isReviewMode,
+          isRevisitMode: true,
+        );
+
       case BitePhase.check:
+      case BitePhase.reattempt:
         return QuestionCard(
           question: bite['question_text'] ?? '',
           type: bite['question_type'] ?? 'mcq',
           options: bite['options'] as List<dynamic>? ?? [],
           selectedAnswer: session.selectedAnswer,
           onSelect: (a) => ref.read(biteSessionProvider.notifier).selectAnswer(a),
+          isReattempt: session.phase == BitePhase.reattempt,
+          attemptNumber: session.attemptCount + 1,
         );
+
       case BitePhase.result:
         return ExplanationCard(
           isCorrect: session.isCorrect ?? false,
           correctAnswer: session.resultData?['correct_answer'] ?? '',
           explanation: session.resultData?['explanation'] ?? '',
           nextReviewText: _formatNextReview(session.resultData?['next_review']),
+          questionText: bite['question_text'] ?? '',
+          conceptTitle: bite['title'] ?? '',
+          selfRating: session.selfRating,
+          onSelfRate: (r) => ref.read(biteSessionProvider.notifier).submitSelfRating(r),
+          onReviewConcept: () => ref.read(biteSessionProvider.notifier).goToRevisit(),
+          onTryAgain: session.isCorrect == false 
+              ? () => ref.read(biteSessionProvider.notifier).goToReattempt()
+              : null,
         );
     }
   }
@@ -92,22 +125,51 @@ class BiteScreen extends ConsumerWidget {
   Widget _buildActionArea(BuildContext context, WidgetRef ref, BiteSessionState session) {
     if (bite['is_locked'] == true) return const SizedBox.shrink();
 
-    String btnText = "";
-    VoidCallback? onPressed;
+    switch (session.phase) {
+      case BitePhase.learn:
+        return _singleButton(
+          context,
+          label: "I'VE READ THIS — TEST ME",
+          icon: Icons.arrow_forward_rounded,
+          onPressed: () => ref.read(biteSessionProvider.notifier).advanceToCheck(),
+        );
 
-    if (session.phase == BitePhase.learn) {
-      btnText = "I'VE READ THIS";
-      onPressed = () => ref.read(biteSessionProvider.notifier).advanceToCheck();
-    } else if (session.phase == BitePhase.check) {
-      btnText = session.isLoading ? "CHECKING..." : "CHECK ANSWER";
-      onPressed = (session.selectedAnswer != null && !session.isLoading)
-          ? () => ref.read(biteSessionProvider.notifier).submitAnswer(bite['bite_id'] ?? bite['id'].toString())
-          : null;
-    } else {
-      btnText = "NEXT BITE →";
-      onPressed = () => _goToNextBite(context, ref);
+      case BitePhase.revisit:
+        return _singleButton(
+          context,
+          label: "BACK TO EXPLANATION",
+          icon: Icons.arrow_back_rounded,
+          onPressed: () => ref.read(biteSessionProvider.notifier).returnToResult(),
+        );
+
+      case BitePhase.check:
+      case BitePhase.reattempt:
+        return _singleButton(
+          context,
+          label: session.isLoading ? "CHECKING..." : "CHECK ANSWER",
+          onPressed: (session.selectedAnswer != null && !session.isLoading)
+              ? () => ref.read(biteSessionProvider.notifier)
+                  .submitAnswer(bite['bite_id'] ?? bite['id'].toString())
+              : null,
+        );
+
+      case BitePhase.result:
+        final canProceed = session.isCorrect == true || session.selfRating != null;
+        return _singleButton(
+          context,
+          label: canProceed ? "NEXT BITE →" : "RATE YOUR CONFIDENCE TO CONTINUE",
+          onPressed: canProceed ? () => _goToNextBite(context, ref) : null,
+          dimmed: !canProceed,
+        );
     }
+  }
 
+  Widget _singleButton(BuildContext context, {
+    required String label,
+    IconData? icon,
+    VoidCallback? onPressed,
+    bool dimmed = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -117,26 +179,40 @@ class BiteScreen extends ConsumerWidget {
       child: SizedBox(
         width: double.infinity,
         height: 56,
-        child: ElevatedButton(
+        child: ElevatedButton.icon(
           onPressed: onPressed,
-          child: Text(btnText),
+          icon: icon != null ? Icon(icon, size: 18) : const SizedBox.shrink(),
+          label: Text(label),
+          style: onPressed == null || dimmed
+              ? ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.05),
+                  foregroundColor: Colors.white38,
+                )
+              : null,
         ),
       ),
     );
   }
 
   void _goToNextBite(BuildContext context, WidgetRef ref) async {
+    final session = ref.read(biteSessionProvider);
     final nextBiteData = await ApiService().getTodaysBite();
-    if (context.mounted && nextBiteData != null && nextBiteData['bite'] != null) {
-      // Reset session state for the new bite
-      ref.read(biteSessionProvider.notifier).reset();
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => BiteScreen(bite: nextBiteData['bite'])),
-      );
-    } else if (context.mounted) {
-      Navigator.pop(context);
+    
+    if (context.mounted) {
+      // Return result to support within-session requeue logic in ReviewScreen
+      Navigator.pop(context, {
+        'requeue': session.selfRating == 1,
+        'has_next': nextBiteData != null && nextBiteData['bite'] != null,
+      });
+
+      // If we are in TodaysBite flow (not Review flow), we navigate automatically
+      if (!isReviewMode && nextBiteData != null && nextBiteData['bite'] != null) {
+        ref.read(biteSessionProvider.notifier).reset();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => BiteScreen(bite: nextBiteData['bite'])),
+        );
+      }
     }
   }
 

@@ -9,6 +9,8 @@ class QuestionCard extends StatelessWidget {
   final List<dynamic> options;
   final String? selectedAnswer;
   final Function(String) onSelect;
+  final bool isReattempt;
+  final int attemptNumber;
 
   const QuestionCard({
     super.key,
@@ -17,6 +19,8 @@ class QuestionCard extends StatelessWidget {
     required this.options,
     this.selectedAnswer,
     required this.onSelect,
+    this.isReattempt = false,
+    this.attemptNumber = 1,
   });
 
   @override
@@ -26,6 +30,30 @@ class QuestionCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (isReattempt)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.refresh_rounded, color: Color(0xFF6366F1), size: 14),
+                const SizedBox(width: 8),
+                Text(
+                  'Attempt #$attemptNumber — you\'ve reviewed the concept. Try again!',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: const Color(0xFF6366F1),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         Row(
           children: [
             const Icon(Icons.help_outline, color: Color(0xFF8B949E), size: 18),

@@ -8,6 +8,9 @@ class BiteCard extends StatelessWidget {
   final String content;
   final String? formula;
   final String? example;
+  final bool isReviewMode;     // NEW: true when this is an SRS review bite
+  final bool isRevisitMode;    // NEW: true when user hit "Review Concept" from result
+  final bool previouslyWeak;   // NEW: true when SRS status == 'WEAK'
 
   const BiteCard({
     super.key,
@@ -15,15 +18,41 @@ class BiteCard extends StatelessWidget {
     required this.content,
     this.formula,
     this.example,
+    this.isReviewMode = false,
+    this.isRevisitMode = false,
+    this.previouslyWeak = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final markdownStyle = AppMarkdownStyle.getStyle(context);
 
+    // Contextual banner logic
+    Widget? banner;
+    if (isRevisitMode) {
+      banner = const _ContextBanner(
+        icon: Icons.replay_rounded,
+        text: 'Re-reading this to reinforce your understanding',
+        color: Color(0xFF6366F1),
+      );
+    } else if (isReviewMode && previouslyWeak) {
+      banner = const _ContextBanner(
+        icon: Icons.flag_rounded,
+        text: 'You previously struggled with this — pay close attention',
+        color: Color(0xFFF43F5E),
+      );
+    } else if (isReviewMode) {
+      banner = const _ContextBanner(
+        icon: Icons.psychology_outlined,
+        text: 'Spaced review — strengthen your memory',
+        color: Color(0xFFFBBF24),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (banner != null) banner,
         Text(
           title,
           style: GoogleFonts.plusJakartaSans(
@@ -104,6 +133,41 @@ class BiteCard extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ContextBanner extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  const _ContextBanner({required this.icon, required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text,
+              style: GoogleFonts.inter(
+                fontSize: 13, color: color.withOpacity(0.9),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -102,11 +102,22 @@ class CandidateSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
+    total_attempts = serializers.SerializerMethodField()
+    correct_attempts = serializers.SerializerMethodField()
     
     class Meta:
         model = Candidate
         fields = [
             'id', 'user', 'first_name', 'last_name', 'email', 'mobile_number', 
             'selected_elective', 'study_streak', 'last_study_date',
-            'attempts_count', 'start_date', 'progress'
+            'attempts_count', 'total_attempts', 'correct_attempts',
+            'start_date', 'progress'
         ]
+
+    def get_total_attempts(self, obj):
+        from .models import BiteAttempt
+        return BiteAttempt.objects.filter(candidate=obj).count()
+
+    def get_correct_attempts(self, obj):
+        from .models import BiteAttempt
+        return BiteAttempt.objects.filter(candidate=obj, is_correct=True).count()

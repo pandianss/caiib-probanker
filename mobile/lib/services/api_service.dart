@@ -229,6 +229,22 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>?> patchSelfRating({required String biteId, required int selfRating}) async {
+    final token = await _getValidToken();
+    if (token == null) return null;
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/bites/submit/'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'bite_id': biteId, 'self_rating': selfRating}),
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<List<dynamic>?> getBitesByPaper(String paperCode) async {
     final token = await _getValidToken();
     if (token == null) return null;

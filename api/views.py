@@ -193,10 +193,25 @@ class SubmitBiteView(BaseAuthenticatedView):
                 is_correct = False
         
         # SRS quality mapping: correct+fast=5, correct+slow=4, wrong=1
+        self_rating = int(request.data.get('self_rating', 0)) # 0 = not provided
         if is_correct:
-            srs_quality = 5 if time_taken < 30 else 4
+            # Map user confidence to SM-2 quality
+            quality_map = {
+                0: 5 if time_taken < 30 else 4, # legacy tie-breaker
+                1: 3, # correct but unsure -> minimum passing
+                2: 4, # correct, getting it -> solid
+                3: 5, # correct and confident -> excellent
+            }
+            srs_quality = quality_map.get(self_rating, 4)
         else:
-            srs_quality = 1
+            # Map user confidence to SM-2 quality (wrong answers)
+            quality_map = {
+                0: 1, # wrong, no rating
+                1: 0, # wrong, still unsure -> blackout
+                2: 2, # wrong but now understands -> poor recall
+                3: 3, # wrong but now fully gets it -> passable (shaky)
+            }
+            srs_quality = quality_map.get(self_rating, 1)
         
         # Update SRS
         meta, _ = SRSMetadata.objects.get_or_create(
@@ -239,6 +254,36 @@ class SubmitBiteView(BaseAuthenticatedView):
             'explanation': bite.explanation,
             'next_review': meta.next_review,
             'srs_quality': srs_quality,
+            'srs_status': meta.status,
+        })
+
+    def patch(self, request):
+        """Accept a self_rating patch after the initial answer was submitted."""
+        candidate = self.get_candidate(request)
+        bite_id = request.data.get('bite_id') or request.data.get('id')
+        self_rating = int(request.data.get('self_rating', 0))
+
+        try:
+            metadata = SRSMetadata.objects.get(candidate=candidate, card_id=bite_id)
+        except SRSMetadata.DoesNotExist:
+            return Response({'error': 'Metadata not found'}, status=404)
+
+        # Recalculate quality incorporating the new rating
+        # We check the status as a proxy for the last correctness
+        is_correct = metadata.status != 'WEAK'
+        
+        if is_correct:
+            quality_map = {0: 4, 1: 3, 2: 4, 3: 5}
+        else:
+            quality_map = {0: 1, 1: 0, 2: 2, 3: 3}
+            
+        quality = quality_map.get(self_rating, 4 if is_correct else 1)
+        get_srs_service().update_card(metadata, quality)
+        
+        return Response({
+            'srs_status': metadata.status, 
+            'next_review': metadata.next_review.isoformat(),
+            'srs_quality': quality
         })
 
 class CandidateProgressView(BaseAuthenticatedView):
